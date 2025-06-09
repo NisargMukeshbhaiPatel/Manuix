@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/button";
 import { Input } from "@/components/input";
@@ -21,7 +22,6 @@ export default function RegisterPage() {
     confirmPassword: "",
     agreeToTerms: false,
   });
-
   const router = useRouter();
 
   const handleInputChange = (field, value) => {
@@ -51,7 +51,6 @@ export default function RegisterPage() {
 
     try {
       const result = await registerUser(submitFormData);
-
       if (result.error) {
         toast({
           title: result.error,
@@ -59,12 +58,28 @@ export default function RegisterPage() {
         });
       } else {
         toast({
-          title: "Account created successfully! Please sign in.",
+          title: "Account created successfully! Signing you in...",
           variant: "default",
         });
-        setTimeout(() => {
-          router.push("/auth/signin");
-        }, 2000);
+        try {
+          const signInResult = await signIn("credentials", {
+            email: formData.email,
+            password: formData.password,
+            redirect: false,
+          });
+
+          if (signInResult?.error) {
+            throw signInResult.error;
+          } else {
+            router.push("/");
+          }
+        } catch (signInError) {
+          toast({
+            title:
+              "Account created but auto-login failed. Please login manually.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       toast({
