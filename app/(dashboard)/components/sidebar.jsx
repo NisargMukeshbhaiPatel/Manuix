@@ -52,7 +52,10 @@ export default function DashSidebar() {
   const { state } = useSidebar();
 
   return (
-    <Sidebar className="border-r-4 border-black bg-white" collapsible="icon">
+    <Sidebar
+      className="border-r-4 border-black bg-white overflow-x-hidden"
+      collapsible="icon"
+    >
       <SidebarHeader className="px-3 py-3 border-b-4 border-black">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1 h-10 w-full">
@@ -93,7 +96,7 @@ export default function DashSidebar() {
                     href={item.href}
                     className="flex items-center gap-3 p-2"
                   >
-                    <item.icon className="h-4 w-4" />
+                    <item.icon />
                     {state === "expanded" && (
                       <span className="font-bold">{item.label}</span>
                     )}
@@ -106,7 +109,7 @@ export default function DashSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t-4 border-black">
-        <div className="flex items-center gap-3">
+        <div className="flex gap-3">
           <User className="h-8 w-8 bg-green-400 stroke-black stroke-2 p-1 shrink-0 shadow-[3px_3px_0_0_black] rounded-md" />
           {state === "expanded" && (
             <>
@@ -116,7 +119,7 @@ export default function DashSidebar() {
               </div>
               <LogOut
                 onClick={signOut}
-                className="ml-auto h-8 w-8 border-black border-2 p-1 shadow-[3px_3px_0_0_black] rounded-sm cursor-pointer"
+                className="shrink-0 ml-auto h-8 w-8 border-black border-2 p-1 shadow-[3px_3px_0_0_black] rounded-sm cursor-pointer"
               />
             </>
           )}
