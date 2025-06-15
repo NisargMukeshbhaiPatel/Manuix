@@ -17,7 +17,7 @@ export async function getCurrentUser() {
       return null;
     }
 
-    await connectDB();
+    await dbConnect();
     const user = await User.findById(token.sub).select("-password");
 
     return user;
