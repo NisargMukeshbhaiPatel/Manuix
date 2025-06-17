@@ -33,7 +33,6 @@ export const authOptions = {
           const isPasswordValid = await user.comparePassword(
             credentials.password,
           );
-          console.log("LOGG_______auth.js:", credentials.password);
 
           if (!isPasswordValid) {
             throw new Error("Invalid password");
