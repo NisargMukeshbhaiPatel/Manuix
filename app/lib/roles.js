@@ -1,1 +1,0 @@
-export const roles = ["user", "admin", "production", "procurement", "sales", "finance"]
