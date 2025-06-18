@@ -110,14 +110,14 @@ export default function ProductsTable() {
                 Products
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Total: {data.pagination.total}
+                Total: {data?.pagination.total || "¯\\_(ツ)_/¯"}
               </p>
             </div>
             <div className="w-full sm:w-80">
               <SearchInput
                 value={searchTerm}
                 onChange={handleSearchChange}
-                placeholder="Search by Name"
+                placeholder="Product Name"
               />
             </div>
             <div className="flex gap-2">

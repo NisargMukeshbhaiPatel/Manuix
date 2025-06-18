@@ -37,7 +37,7 @@ export default function SearchInput({
         placeholder={placeholder}
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
-        className="pl-10 pr-10"
+        className="pl-7 pr-7"
       />
       {localValue && (
         <Button

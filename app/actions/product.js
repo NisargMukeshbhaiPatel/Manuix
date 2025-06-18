@@ -4,11 +4,14 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Product from "@/models/Product";
+import { createCollectionRBAC } from "@/lib/rbac";
+
+const { withCreate, withRead, withUpdate, withDelete } = createCollectionRBAC("products");
 
 /**
  * Get all products with pagination and filtering
  */
-export async function getProducts({ page = 1, limit = 10, name = null } = {}) {
+export const getProducts = withRead(async ({ page = 1, limit = 10, name = null } = {}) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -50,12 +53,12 @@ export async function getProducts({ page = 1, limit = 10, name = null } = {}) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Get a single product by ID
  */
-export async function getProductById(id) {
+export const getProductById = withRead(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -88,18 +91,18 @@ export async function getProductById(id) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Create a new product
  */
-export async function createProduct(productData) {
+export const createProduct = withCreate(async (productData) => {
   try {
     // Connect to the database
     await dbConnect();
 
     // Add the user ID who created the product
-	const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     productData.created_by = session.user.id;
 
     // Create a new product
@@ -116,12 +119,12 @@ export async function createProduct(productData) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Update an existing product
  */
-export async function updateProduct(id, productData) {
+export const updateProduct = withUpdate(async (id, productData) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -150,12 +153,12 @@ export async function updateProduct(id, productData) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Delete a product
  */
-export async function deleteProduct(id) {
+export const deleteProduct = withDelete(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -196,4 +199,4 @@ export async function deleteProduct(id) {
       error: error.message,
     };
   }
-}
+});

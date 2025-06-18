@@ -14,7 +14,7 @@ import { Input } from "@/components/input";
 import { Label } from "@/components/label";
 import { Textarea } from "@/components/textarea";
 import { Package, Save, X } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 export default function ProductEditModal({
   product,
@@ -22,7 +22,6 @@ export default function ProductEditModal({
   onClose,
   queryKey,
 }) {
-  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     sku: "",

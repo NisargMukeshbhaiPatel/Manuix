@@ -6,14 +6,18 @@ import requirePageAccess from "@/lib/requirePageAccess";
 
 export default async function ProductsPage() {
   await requirePageAccess({
-    products: ["read"]
+    products: ["read"],
   });
   const queryClient = getQueryClient();
 
-  await queryClient.prefetchQuery({
-    queryKey: ["products", 1, ""],
-    queryFn: () => getProducts({ page: 1, name: "" }),
-  });
+  try {
+    await queryClient.prefetchQuery({
+      queryKey: ["products", 1, ""],
+      queryFn: () => getProducts({ page: 1, name: "" }),
+    });
+  } catch (error) {
+    return error.message;
+  }
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

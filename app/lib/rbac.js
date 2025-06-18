@@ -1,3 +1,6 @@
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+
 export const roles = [
   "user",
   "admin",
@@ -83,15 +86,23 @@ export function canAccess(role, collection, action) {
 
 // For actions
 export function createCollectionRBAC(collection) {
-  const requireAccess = (role, action) => {
-    if (!canAccess(role, collection, action)) {
-      throw new Error(`Access denied: ${role} cannot ${action} ${collection}`);
+  const requireAccess = async (action) => {
+    const { user } = await getServerSession(authOptions);
+    console.log(collection, action, canAccess(user.role, collection, action));
+    if (!canAccess(user?.role, collection, action)) {
+      throw new Error(
+        `Access denied: ${user?.role} cannot ${action} ${collection}`,
+      );
     }
   };
 
   const withAccess = (action, fn) => {
-    return async (userRole, ...args) => {
-      requireAccess(userRole, action);
+    return async (...args) => {
+      try {
+        await requireAccess(action);
+      } catch (error) {
+        throw error;
+      }
       return fn(...args);
     };
   };

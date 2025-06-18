@@ -1,7 +1,12 @@
-import { QueryClient, isServer } from "@tanstack/react-query";
+import { QueryClient, QueryCache, isServer } from "@tanstack/react-query";
 
 function createQueryClient() {
   return new QueryClient({
+    queryCache: new QueryCache({
+      onError: (error) => {
+        throw error;
+      },
+    }),
     defaultOptions: {
       queries: {
         staleTime: 2 * 60 * 1000,

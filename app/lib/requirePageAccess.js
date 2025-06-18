@@ -9,7 +9,7 @@ import { authOptions } from "@/lib/auth";
 //   posts: ['read'],
 // })
 export default async function requirePageAccess(accessChecks) {
-  const referer = (await headers().get("referer")) || "/";
+  const referer = (await headers()).get("referer") || "/";
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.role) {
@@ -24,4 +24,13 @@ export default async function requirePageAccess(accessChecks) {
   );
 
   if (!hasAccess) redirect(referer);
+}
+
+export async function requireRoleAccess(roleRequired) {
+  const referer = (await headers()).get("referer") || "/";
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.role || !session.user.role !== roleRequired) {
+    redirect(referer);
+  }
 }
