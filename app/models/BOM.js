@@ -1,11 +1,14 @@
 import mongoose from "mongoose";
+import Product from "@/models/Product";
+import RawMaterial from "@/models/RawMaterial";
+import User from "@/models/User";
 
 // BOMItem Schema (Subdocument)
 const BOMItemSchema = new mongoose.Schema(
   {
     raw_material_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "RawMaterial",
+      ref: RawMaterial.modelName,
       required: [true, "Raw material is required"],
     },
     quantity: {
@@ -31,14 +34,14 @@ const BOMSchema = new mongoose.Schema(
   {
     product_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Product",
+      ref: Product.modelName,
       required: [true, "Product is required"],
       index: true,
       unique: true, // Each product can only have one BOM
     },
     created_by: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: User.modelName,
       required: [true, "Creator reference is required"],
     },
     items: [BOMItemSchema], // Array of BOMItems

@@ -1,11 +1,13 @@
 import mongoose from "mongoose";
+import User from "@/models/User";
+import RawMaterial from "@/models/RawMaterial";
 
 // PurchaseOrderItem Schema (Subdocument)
 const PurchaseOrderItemSchema = new mongoose.Schema(
   {
     raw_material_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "RawMaterial",
+      ref: RawMaterial.modelName,
       required: [true, "Raw material is required"],
     },
     quantity: {
@@ -58,7 +60,7 @@ const PurchaseOrderSchema = new mongoose.Schema(
     },
     created_by: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: User.modelName,
       required: [true, "Creator reference is required"],
     },
     items: [PurchaseOrderItemSchema], // Array of PurchaseOrderItems

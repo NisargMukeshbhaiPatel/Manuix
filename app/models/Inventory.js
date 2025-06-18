@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import Product from "@/models/Product";
+import RawMaterial from "@/models/RawMaterial";
 
 const InventorySchema = new mongoose.Schema(
   {
@@ -17,7 +19,7 @@ const InventorySchema = new mongoose.Schema(
     item_type_ref: {
       type: String,
       required: true,
-      enum: ['Product', 'RawMaterial'],
+      enum: [Product.modelName, RawMaterial.modelName],
     },
     quantity: {
       type: mongoose.Schema.Types.Decimal128,
@@ -39,7 +41,7 @@ const InventorySchema = new mongoose.Schema(
 // Pre-save hook to set item_type_ref
 InventorySchema.pre('save', function(next) {
   if (this.isModified('item_type') || this.isNew) {
-    this.item_type_ref = this.item_type === 'product' ? 'Product' : 'RawMaterial';
+    this.item_type_ref = this.item_type === 'product' ? Product.modelName : RawMaterial.modelName;
   }
   next();
 });
@@ -67,7 +69,7 @@ InventorySchema.methods.updateQuantity = async function(change) {
 
 // Static method to update or create inventory entry
 InventorySchema.statics.updateStock = async function(itemType, itemId, change, options = {}) {
-  const typeRef = itemType === 'product' ? 'Product' : 'RawMaterial';
+  const typeRef = itemType === 'product' ? Product.modelName : RawMaterial.modelName;
   
   // Find and update or create new entry if it doesn't exist
   const inventory = await this.findOneAndUpdate(

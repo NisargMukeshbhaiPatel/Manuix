@@ -37,6 +37,7 @@ const ProductSchema = new mongoose.Schema(
     toJSON: {
       transform: (doc, ret) => {
         ret._id = ret._id.toString();
+        delete ret.__v;
         ret.created_by = ret.created_by.toString();
         ret.price = Number(ret.price);
         return ret;

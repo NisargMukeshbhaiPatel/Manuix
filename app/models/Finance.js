@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import User from "@/models/User";
 
 const FinanceSchema = new mongoose.Schema(
   {
@@ -40,7 +41,7 @@ const FinanceSchema = new mongoose.Schema(
     },
     created_by: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: User.modelName,
       required: [true, "Creator reference is required"],
     },
     // Optional fields for more detailed finance tracking

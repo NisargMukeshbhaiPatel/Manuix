@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import User from "@/models/User";
 
 const RawMaterialSchema = new mongoose.Schema(
   {
@@ -20,7 +21,7 @@ const RawMaterialSchema = new mongoose.Schema(
     },
     created_by: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: User.modelName,
       required: [true, "Creator reference is required"],
     },
   },

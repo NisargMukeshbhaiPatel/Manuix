@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import User from "@/models/User";
 
 const NotificationSchema = new mongoose.Schema(
   {
@@ -44,7 +45,7 @@ const NotificationSchema = new mongoose.Schema(
     },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: User.modelName,
       required: true, // Every notification is assigned to a user
       index: true,
     },
