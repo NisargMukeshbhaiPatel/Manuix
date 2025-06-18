@@ -70,7 +70,7 @@ export const getSalesOrders = withRead(async ({
 
     return {
       success: true,
-      data: salesOrders,
+      data: salesOrders.map(so => so.toJSON()),
       pagination: {
         total: totalItems,
         page,
@@ -197,7 +197,7 @@ export const getSalesOrderById = withRead(async (id) => {
 
     return {
       success: true,
-      data: salesOrder,
+      data: salesOrder.toJSON(),
     };
   } catch (error) {
     console.error("Error fetching sales order:", error);
@@ -237,7 +237,7 @@ export const createSalesOrder = withCreate(async (orderData) => {
 
     return {
       success: true,
-      data: salesOrder,
+      data: salesOrder.toJSON(),
     };
   } catch (error) {
     console.error("Error creating sales order:", error);
@@ -303,7 +303,7 @@ export const updateSalesOrder = withUpdate(async (id, orderData) => {
 
     return {
       success: true,
-      data: updatedOrder,
+      data: updatedOrder.toJSON(),
       statusChanged: isStatusChange,
       oldStatus: isStatusChange ? oldStatus : null,
       newStatus: isStatusChange ? orderData.status : null,
@@ -356,7 +356,7 @@ export const updateSalesOrderPayment = withUpdate(async (id, paymentData) => {
 
     return {
       success: true,
-      data: updatedOrder,
+      data: updatedOrder.toJSON(),
       payment: result
     };
   } catch (error) {

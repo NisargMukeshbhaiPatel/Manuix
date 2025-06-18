@@ -67,7 +67,7 @@ export const getFinanceTransactions = withRead(async ({
 
     return {
       success: true,
-      data: transactions,
+      data: transactions.map(t => t.toJSON()),
       pagination: {
         total: totalItems,
         page,
@@ -171,7 +171,7 @@ export const getFinanceTransactionById = withRead(async (id) => {
 
     return {
       success: true,
-      data: transaction,
+      data: transaction.toJSON(),
     };
   } catch (error) {
     console.error("Error fetching transaction:", error);
@@ -206,7 +206,7 @@ export const createFinanceTransaction = withCreate(async (transactionData) => {
 
     return {
       success: true,
-      data: transaction,
+      data: transaction.toJSON(),
     };
   } catch (error) {
     console.error("Error creating financial transaction:", error);
@@ -248,7 +248,7 @@ export const updateFinanceTransaction = withUpdate(async (id, transactionData) =
 
     return {
       success: true,
-      data: transaction,
+      data: transaction.toJSON(),
     };
   } catch (error) {
     console.error("Error updating financial transaction:", error);

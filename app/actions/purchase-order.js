@@ -63,7 +63,7 @@ export const getPurchaseOrders = withRead(async ({
 
     return {
       success: true,
-      data: purchaseOrders,
+      data: purchaseOrders.map(po => po.toJSON()),
       pagination: {
         total: totalItems,
         page,
@@ -188,7 +188,7 @@ export const getPurchaseOrderById = withRead(async (id) => {
 
     return {
       success: true,
-      data: purchaseOrder,
+      data: purchaseOrder.toJSON(),
     };
   } catch (error) {
     console.error("Error fetching purchase order:", error);
@@ -228,7 +228,7 @@ export const createPurchaseOrder = withCreate(async (orderData) => {
 
     return {
       success: true,
-      data: purchaseOrder,
+      data: purchaseOrder.toJSON(),
     };
   } catch (error) {
     console.error("Error creating purchase order:", error);
@@ -294,7 +294,7 @@ export const updatePurchaseOrder = withUpdate(async (id, orderData) => {
 
     return {
       success: true,
-      data: updatedOrder,
+      data: updatedOrder.toJSON(),
       statusChanged: isStatusChange,
       oldStatus: isStatusChange ? oldStatus : null,
       newStatus: isStatusChange ? orderData.status : null,

@@ -53,7 +53,7 @@ export async function getNotifications({
 
     return {
       success: true,
-      data: notifications,
+      data: notifications.map(n => n.toJSON()),
       pagination: {
         total: totalItems,
         page,
@@ -148,7 +148,7 @@ export async function getNotificationById(id) {
 
     return {
       success: true,
-      data: notification,
+      data: notification.toJSON(),
     };
   } catch (error) {
     console.error("Error fetching notification:", error);
@@ -196,7 +196,7 @@ export async function markNotificationAsRead(id) {
 
     return {
       success: true,
-      data: notification,
+      data: notification.toJSON(),
     };
   } catch (error) {
     console.error("Error marking notification as read:", error);
@@ -295,7 +295,7 @@ export async function createNotification(notificationData) {
 
     return {
       success: true,
-      data: notification,
+      data: notification.toJSON(),
     };
   } catch (error) {
     console.error("Error creating notification:", error);

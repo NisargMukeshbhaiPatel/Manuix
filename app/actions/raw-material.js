@@ -39,7 +39,7 @@ export const getRawMaterials = withRead(async ({ page = 1, limit = 10, name = nu
 
     return {
       success: true,
-      data: rawMaterials,
+      data: rawMaterials.map(rm => rm.toJSON()),
       pagination: {
         total: totalItems,
         page,
@@ -115,7 +115,7 @@ export const createRawMaterial = withCreate(async (materialData) => {
 
     return {
       success: true,
-      data: rawMaterial,
+      data: rawMaterial.toJSON(),
     };
   } catch (error) {
     console.error("Error creating raw material:", error);
@@ -154,7 +154,7 @@ export const updateRawMaterial = withUpdate(async (id, materialData) => {
 
     return {
       success: true,
-      data: rawMaterial,
+      data: rawMaterial.toJSON(),
     };
   } catch (error) {
     console.error("Error updating raw material:", error);

@@ -51,7 +51,7 @@ export const getInventoryItems = withRead(async ({ page = 1, limit = 10, itemTyp
 
     return {
       success: true,
-      data: inventoryItems,
+      data: inventoryItems.map(item => item.toJSON()),
       pagination: {
         total: totalItems,
         page,
@@ -89,7 +89,7 @@ export const getInventoryItemById = withRead(async (id) => {
 
     return {
       success: true,
-      data: inventoryItem,
+      data: inventoryItem.toJSON(),
     };
   } catch (error) {
     console.error("Error fetching inventory item:", error);
@@ -152,7 +152,7 @@ export const updateInventory = withUpdate(async ({ itemType, itemId, quantity, o
 
     return {
       success: true,
-      data: result,
+      data: result.toJSON(),
     };
   } catch (error) {
     console.error("Error updating inventory:", error);

@@ -1,7 +1,6 @@
 "use server";
 
 import { getServerSession } from "next-auth/next";
-import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/db";
 import BOM from "@/models/BOM";
 import { authOptions } from "@/lib/auth";
@@ -42,7 +41,7 @@ export const getBOMs = withRead(async ({ page = 1, limit = 10, productId = null 
 
     return {
       success: true,
-      data: boms,
+      boms:boms.map((b) => b.toJSON()),
       pagination: {
         total: totalItems,
         page,
@@ -83,7 +82,7 @@ export const getBOMById = withRead(async (id) => {
 
     return {
       success: true,
-      data: bom,
+      data: bom.toJSON(),
     };
   } catch (error) {
     console.error("Error fetching BOM:", error);
@@ -120,7 +119,7 @@ export const createBOM = withCreate(async (bomData) => {
 
     return {
       success: true,
-      data: bom,
+      data: bom.toJSON(),
     };
   } catch (error) {
     console.error("Error creating BOM:", error);
@@ -158,13 +157,10 @@ export const updateBOM = withUpdate(async (id, bomData) => {
     await bom.populate('created_by', 'name email');
     await bom.populate('items.raw_material_id');
 
-    // Revalidate the BOM and BOMs cache
-    revalidatePath(`/bom/${id}`);
-    revalidatePath('/bom');
 
     return {
       success: true,
-      data: bom,
+      data: bom.toJSON(),
     };
   } catch (error) {
     console.error("Error updating BOM:", error);
@@ -199,9 +195,6 @@ export const deleteBOM = withDelete(async (id) => {
     
     // Delete the BOM
     await bom.remove();
-
-    // Revalidate the BOMs cache
-    revalidatePath('/bom');
 
     return {
       success: true,
