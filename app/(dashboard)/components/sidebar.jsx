@@ -3,24 +3,21 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import {
-  BarChart3,
+  LayoutDashboard,
+  PackageSearch,
+  Boxes,
+  Warehouse,
+  ShoppingCart,
+  PackagePlus,
+  Banknote,
+  Bell,
+  ListOrdered,
   User,
   LogOut,
-  ClipboardList,
-  Cog,
-  Factory,
-  Home,
-  LayoutDashboard,
-  Menu,
-  Package,
-  ShoppingCart,
-  Truck,
   Users,
-  X,
 } from "lucide-react";
 
 import ManuixLogo from "@/components/logo";
-import { Button } from "@/components/button";
 import {
   Sidebar,
   SidebarContent,
@@ -33,19 +30,18 @@ import {
   useSidebar,
 } from "@/components/sidebar";
 
-// Navigation items with icons
 const navItems = [
-  { icon: Home, label: "Home", href: "/" },
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  { icon: Factory, label: "Production", href: "/production" },
-  { icon: Package, label: "Inventory", href: "/inventory" },
-  { icon: ClipboardList, label: "Orders", href: "/orders" },
-  { icon: ShoppingCart, label: "Purchasing", href: "/purchasing" },
-  { icon: Truck, label: "Shipping", href: "/shipping" },
-  { icon: Users, label: "Employees", href: "/employees" },
-  { icon: BarChart3, label: "Reports", href: "/reports" },
-  { icon: Cog, label: "Settings", href: "/settings" },
-];
+  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
+  { icon: PackageSearch, label: "Products", href: "/products" },
+  { icon: ListOrdered, label: "Bill of Materials", href: "/bom" },
+  { icon: Boxes, label: "Raw Materials", href: "/raw-materials" },
+  { icon: Warehouse, label: "Inventory", href: "/inventory" },
+  { icon: ShoppingCart, label: "Sales Orders", href: "/sales-orders" },
+  { icon: PackagePlus, label: "Purchase Orders", href: "/purchases" },
+  { icon: Banknote, label: "Finance", href: "/finance" },
+  // { icon: Users, label: "Management", href: "/" },
+]
+
 
 export default function DashSidebar() {
   const pathname = usePathname();
