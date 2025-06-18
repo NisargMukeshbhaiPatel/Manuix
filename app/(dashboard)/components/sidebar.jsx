@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import {
+  Shield,
   LayoutDashboard,
   PackageSearch,
   Boxes,
@@ -113,8 +114,13 @@ export default function DashSidebar() {
               <div>
                 <p className="font-bold text-sm">{user?.name || "..."}</p>
                 <p
-                  className={`text-xs ${user?.role === "admin" ? "text-green-400 font-semibold" : ""}`}
+                  className={`text-xs flex items-center ${
+                    user?.role === "admin" ? "font-bold" : ""
+                  }`}
                 >
+                  {user?.role === "admin" && (
+                    <Shield className="w-4 h-4 text-green-500" />
+                  )}
                   {user?.role || ".."}
                 </p>
               </div>
