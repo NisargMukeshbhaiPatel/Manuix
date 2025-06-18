@@ -5,7 +5,7 @@ import requirePageAccess from "@/lib/requirePageAccess";
 
 export default async function InventoryPage() {
   await requirePageAccess({
-    inventory: ["read"]
+    inventories: ["read"]
   });
 
   const queryClient = getQueryClient();

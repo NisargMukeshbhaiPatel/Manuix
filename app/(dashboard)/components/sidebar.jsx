@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import {
@@ -14,7 +15,6 @@ import {
   ListOrdered,
   User,
   LogOut,
-  Users,
 } from "lucide-react";
 
 import ManuixLogo from "@/components/logo";
@@ -40,10 +40,11 @@ const navItems = [
   { icon: PackagePlus, label: "Purchase Orders", href: "/purchases" },
   { icon: Banknote, label: "Finance", href: "/finance" },
   // { icon: Users, label: "Management", href: "/" },
-]
-
+];
 
 export default function DashSidebar() {
+  const { data: session, status } = useSession();
+  const user = session?.user;
   const pathname = usePathname();
   const { state } = useSidebar();
 
@@ -110,8 +111,12 @@ export default function DashSidebar() {
           {state === "expanded" && (
             <>
               <div>
-                <p className="font-bold text-sm">Username</p>
-                <p className="text-xs">role</p>
+                <p className="font-bold text-sm">{user?.name || "..."}</p>
+                <p
+                  className={`text-xs ${user?.role === "admin" ? "text-green-400 font-semibold" : ""}`}
+                >
+                  {user?.role || ".."}
+                </p>
               </div>
               <LogOut
                 onClick={signOut}

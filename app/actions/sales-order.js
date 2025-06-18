@@ -5,11 +5,14 @@ import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/db";
 import SalesOrder from "@/models/SalesOrder";
+import { createCollectionRBAC } from "@/lib/rbac";
+
+const { withCreate, withRead, withUpdate, withDelete } = createCollectionRBAC("salesorders");
 
 /**
  * Get all sales orders with pagination and filtering
  */
-export async function getSalesOrders({ 
+export const getSalesOrders = withRead(async ({ 
   page = 1, 
   limit = 10, 
   status = null,
@@ -17,7 +20,7 @@ export async function getSalesOrders({
   customerName = null,
   startDate = null,
   endDate = null
-} = {}) {
+} = {}) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -83,12 +86,12 @@ export async function getSalesOrders({
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Get sales order statistics
  */
-export async function getSalesOrderStats({ period = 'month' } = {}) {
+export const getSalesOrderStats = withRead(async ({ period = 'month' } = {}) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -170,12 +173,12 @@ export async function getSalesOrderStats({ period = 'month' } = {}) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Get a single sales order by ID
  */
-export async function getSalesOrderById(id) {
+export const getSalesOrderById = withRead(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -204,12 +207,12 @@ export async function getSalesOrderById(id) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Create a new sales order
  */
-export async function createSalesOrder(orderData) {
+export const createSalesOrder = withCreate(async (orderData) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -244,12 +247,12 @@ export async function createSalesOrder(orderData) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Update an existing sales order
  */
-export async function updateSalesOrder(id, orderData) {
+export const updateSalesOrder = withUpdate(async (id, orderData) => {
   try {
     // Connect to the database
     await dbConnect();    // Calculate total amount if items are being updated
@@ -313,12 +316,12 @@ export async function updateSalesOrder(id, orderData) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Update payment status for a sales order
  */
-export async function updateSalesOrderPayment(id, paymentData) {
+export const updateSalesOrderPayment = withUpdate(async (id, paymentData) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -364,12 +367,12 @@ export async function updateSalesOrderPayment(id, paymentData) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Delete a sales order
  */
-export async function deleteSalesOrder(id) {
+export const deleteSalesOrder = withDelete(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -410,4 +413,4 @@ export async function deleteSalesOrder(id) {
       error: error.message,
     };
   }
-}
+});

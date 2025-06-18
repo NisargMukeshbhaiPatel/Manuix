@@ -5,11 +5,14 @@ import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/db";
 import BOM from "@/models/BOM";
 import { authOptions } from "@/lib/auth";
+import { createCollectionRBAC } from "@/lib/rbac";
+
+const { withCreate, withRead, withUpdate, withDelete } = createCollectionRBAC("boms");
 
 /**
  * Get all BOMs with pagination and filtering
  */
-export async function getBOMs({ page = 1, limit = 10, productId = null } = {}) {
+export const getBOMs = withRead(async ({ page = 1, limit = 10, productId = null } = {}) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -55,12 +58,12 @@ export async function getBOMs({ page = 1, limit = 10, productId = null } = {}) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Get a single BOM by ID
  */
-export async function getBOMById(id) {
+export const getBOMById = withRead(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -90,12 +93,12 @@ export async function getBOMById(id) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Create a new BOM
  */
-export async function createBOM(bomData) {
+export const createBOM = withCreate(async (bomData) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -127,12 +130,12 @@ export async function createBOM(bomData) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Update an existing BOM
  */
-export async function updateBOM(id, bomData) {
+export const updateBOM = withUpdate(async (id, bomData) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -171,12 +174,12 @@ export async function updateBOM(id, bomData) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Delete a BOM
  */
-export async function deleteBOM(id) {
+export const deleteBOM = withDelete(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -212,4 +215,4 @@ export async function deleteBOM(id) {
       error: error.message,
     };
   }
-}
+});

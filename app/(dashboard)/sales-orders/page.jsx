@@ -6,7 +6,7 @@ import requirePageAccess from "@/lib/requirePageAccess";
 export default async function SalesOrdersPage() {
   // Protect the page with appropriate permissions
   await requirePageAccess({
-    sales_orders: ["read"]
+    salesorders: ["read"]
   });
 
   const queryClient = getQueryClient();

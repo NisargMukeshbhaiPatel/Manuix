@@ -5,11 +5,14 @@ import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/db";
 import Finance from "@/models/Finance";
 import { authOptions } from "@/lib/auth";
+import { createCollectionRBAC } from "@/lib/rbac";
+
+const { withCreate, withRead, withUpdate, withDelete } = createCollectionRBAC("finances");
 
 /**
  * Get all financial transactions with pagination and filtering
  */
-export async function getFinanceTransactions({ 
+export const getFinanceTransactions = withRead(async ({ 
   page = 1, 
   limit = 10, 
   type = null, 
@@ -17,7 +20,7 @@ export async function getFinanceTransactions({
   endDate = null,
   refType = null,
   refId = null
-} = {}) {
+} = {}) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -80,12 +83,12 @@ export async function getFinanceTransactions({
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Get financial summary (income, expenses, profit for date range)
  */
-export async function getFinanceSummary({ startDate, endDate } = {}) {
+export const getFinanceSummary = withRead(async ({ startDate, endDate } = {}) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -145,12 +148,12 @@ export async function getFinanceSummary({ startDate, endDate } = {}) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Get a single financial transaction by ID
  */
-export async function getFinanceTransactionById(id) {
+export const getFinanceTransactionById = withRead(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -178,12 +181,12 @@ export async function getFinanceTransactionById(id) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Create a new financial transaction
  */
-export async function createFinanceTransaction(transactionData) {
+export const createFinanceTransaction = withCreate(async (transactionData) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -213,12 +216,12 @@ export async function createFinanceTransaction(transactionData) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Update an existing financial transaction
  */
-export async function updateFinanceTransaction(id, transactionData) {
+export const updateFinanceTransaction = withUpdate(async (id, transactionData) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -255,12 +258,12 @@ export async function updateFinanceTransaction(id, transactionData) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Delete a financial transaction
  */
-export async function deleteFinanceTransaction(id) {
+export const deleteFinanceTransaction = withDelete(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -290,4 +293,4 @@ export async function deleteFinanceTransaction(id) {
       error: error.message,
     };
   }
-}
+});

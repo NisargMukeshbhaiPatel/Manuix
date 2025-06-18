@@ -5,11 +5,14 @@ import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/db";
 import RawMaterial from "@/models/RawMaterial";
+import { createCollectionRBAC } from "@/lib/rbac";
+
+const { withCreate, withRead, withUpdate, withDelete } = createCollectionRBAC("rawmaterials");
 
 /**
  * Get all raw materials with pagination and filtering
  */
-export async function getRawMaterials({ page = 1, limit = 10, name = null } = {}) {
+export const getRawMaterials = withRead(async ({ page = 1, limit = 10, name = null } = {}) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -52,12 +55,12 @@ export async function getRawMaterials({ page = 1, limit = 10, name = null } = {}
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Get a single raw material by ID
  */
-export async function getRawMaterialById(id) {
+export const getRawMaterialById = withRead(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -90,12 +93,12 @@ export async function getRawMaterialById(id) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Create a new raw material
  */
-export async function createRawMaterial(materialData) {
+export const createRawMaterial = withCreate(async (materialData) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -122,12 +125,12 @@ export async function createRawMaterial(materialData) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Update an existing raw material
  */
-export async function updateRawMaterial(id, materialData) {
+export const updateRawMaterial = withUpdate(async (id, materialData) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -161,12 +164,12 @@ export async function updateRawMaterial(id, materialData) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Delete a raw material
  */
-export async function deleteRawMaterial(id) {
+export const deleteRawMaterial = withDelete(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -209,4 +212,4 @@ export async function deleteRawMaterial(id) {
       error: error.message,
     };
   }
-}
+});

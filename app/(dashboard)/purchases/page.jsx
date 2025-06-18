@@ -5,7 +5,7 @@ import requirePageAccess from "@/lib/requirePageAccess";
 
 export default async function PurchaseOrdersPage() {
   await requirePageAccess({
-    purchase_orders: ["read"]
+    purchaseorders: ["read"]
   });
 
   const queryClient = getQueryClient();

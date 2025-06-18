@@ -5,18 +5,21 @@ import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/db";
 import PurchaseOrder from "@/models/PurchaseOrder";
+import { createCollectionRBAC } from "@/lib/rbac";
+
+const { withCreate, withRead, withUpdate, withDelete } = createCollectionRBAC("purchaseorders");
 
 /**
  * Get all purchase orders with pagination and filtering
  */
-export async function getPurchaseOrders({ 
+export const getPurchaseOrders = withRead(async ({ 
   page = 1, 
   limit = 10, 
   status = null,
   supplierId = null,
   startDate = null,
   endDate = null
-} = {}) {
+} = {}) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -76,12 +79,12 @@ export async function getPurchaseOrders({
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Get purchase order statistics
  */
-export async function getPurchaseOrderStats({ period = 'month' } = {}) {
+export const getPurchaseOrderStats = withRead(async ({ period = 'month' } = {}) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -161,12 +164,12 @@ export async function getPurchaseOrderStats({ period = 'month' } = {}) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Get a single purchase order by ID
  */
-export async function getPurchaseOrderById(id) {
+export const getPurchaseOrderById = withRead(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -195,12 +198,12 @@ export async function getPurchaseOrderById(id) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Create a new purchase order
  */
-export async function createPurchaseOrder(orderData) {
+export const createPurchaseOrder = withCreate(async (orderData) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -235,12 +238,12 @@ export async function createPurchaseOrder(orderData) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Update an existing purchase order
  */
-export async function updatePurchaseOrder(id, orderData) {
+export const updatePurchaseOrder = withUpdate(async (id, orderData) => {
   try {
     // Connect to the database
     await dbConnect();    // Calculate total amount if items are being updated
@@ -304,12 +307,12 @@ export async function updatePurchaseOrder(id, orderData) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Delete a purchase order
  */
-export async function deletePurchaseOrder(id) {
+export const deletePurchaseOrder = withDelete(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -350,4 +353,4 @@ export async function deletePurchaseOrder(id) {
       error: error.message,
     };
   }
-}
+});

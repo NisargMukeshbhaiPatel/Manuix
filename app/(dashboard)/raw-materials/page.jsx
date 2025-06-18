@@ -6,7 +6,7 @@ import requirePageAccess from "@/lib/requirePageAccess";
 export default async function RawMaterialsPage() {
   // Protect the page with appropriate permissions
   await requirePageAccess({
-    raw_materials: ["read"]
+    rawmaterials: ["read"]
   });
 
   const queryClient = getQueryClient();

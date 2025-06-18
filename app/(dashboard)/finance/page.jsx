@@ -5,7 +5,7 @@ import requirePageAccess from "@/lib/requirePageAccess";
 
 export default async function FinancePage() {
   await requirePageAccess({
-    finance: ["read"]
+    finances: ["read"]
   });
 
   const queryClient = getQueryClient();

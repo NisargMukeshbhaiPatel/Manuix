@@ -5,11 +5,14 @@ import dbConnect from "@/lib/db";
 import Inventory from "@/models/Inventory";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { createCollectionRBAC } from "@/lib/rbac";
+
+const { withCreate, withRead, withUpdate, withDelete } = createCollectionRBAC("inventories");
 
 /**
  * Get all inventory items with pagination and filtering
  */
-export async function getInventoryItems({ page = 1, limit = 10, itemType = null, lowStock = false } = {}) {
+export const getInventoryItems = withRead(async ({ page = 1, limit = 10, itemType = null, lowStock = false } = {}) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -64,12 +67,12 @@ export async function getInventoryItems({ page = 1, limit = 10, itemType = null,
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Get a single inventory item by ID
  */
-export async function getInventoryItemById(id) {
+export const getInventoryItemById = withRead(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -96,12 +99,12 @@ export async function getInventoryItemById(id) {
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Update inventory levels (add, remove, or set quantity)
  */
-export async function updateInventory({ itemType, itemId, quantity, operation = 'add' }) {
+export const updateInventory = withUpdate(async ({ itemType, itemId, quantity, operation = 'add' }) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -159,12 +162,12 @@ export async function updateInventory({ itemType, itemId, quantity, operation = 
       error: error.message,
     };
   }
-}
+});
 
 /**
  * Delete an inventory item
  */
-export async function deleteInventoryItem(id) {
+export const deleteInventoryItem = withDelete(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -194,4 +197,4 @@ export async function deleteInventoryItem(id) {
       error: error.message,
     };
   }
-}
+});

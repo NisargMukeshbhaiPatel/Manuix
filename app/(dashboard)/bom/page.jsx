@@ -5,7 +5,7 @@ import requirePageAccess from "@/lib/requirePageAccess";
 
 export default async function BOMPage() {
   await requirePageAccess({
-    bom: ["read"]
+    boms: ["read"]
   });
 
   const queryClient = getQueryClient();
