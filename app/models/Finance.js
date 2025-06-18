@@ -61,7 +61,56 @@ const FinanceSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    toJSON: { getters: true },
+    toJSON: {
+      transform: function(doc, ret) {
+        ret._id = ret._id.toString();
+        delete ret.__v;
+
+        if (ret.amount) {
+          ret.amount = parseFloat(ret.amount.toString());
+        }
+
+        if (ret.date) {
+          ret.date = ret.date.toISOString();
+        }
+
+        if (ret.created_by && mongoose.Types.ObjectId.isValid(ret.created_by)) {
+          ret.created_by = ret.created_by.toString();
+        }
+
+        if (ret.created_by && typeof ret.created_by === 'object' && ret.created_by._id) {
+          ret.creator = {
+            id: ret.created_by._id.toString(),
+            name: ret.created_by.name,
+            email: ret.created_by.email
+          };
+          ret.created_by = ret.created_by._id.toString();
+        }
+
+        if (ret.source_id && mongoose.Types.ObjectId.isValid(ret.source_id)) {
+          ret.source_id = ret.source_id.toString();
+        }
+
+        if (ret.source_id && typeof ret.source_id === 'object' && ret.source_id._id) {
+          ret.source = {
+            id: ret.source_id._id.toString(),
+            type: ret.source_type,
+            // Add any other relevant source fields based on source_type
+            ...(ret.source_type === 'SalesOrder' && {
+              customer_name: ret.source_id.customer_name,
+              status: ret.source_id.status
+            }),
+            ...(ret.source_type === 'PurchaseOrder' && {
+              supplier_name: ret.source_id.supplier_name,
+              status: ret.source_id.status
+            })
+          };
+          ret.source_id = ret.source_id._id.toString();
+        }
+
+        return ret;
+      }
+    },
     toObject: { getters: true },
   }
 );

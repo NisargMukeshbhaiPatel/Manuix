@@ -23,7 +23,36 @@ const PurchaseOrderItemSchema = new mongoose.Schema(
   },
   {
     _id: true, // Keep _id for each PurchaseOrderItem
-    toJSON: { getters: true },
+    toJSON: {
+      transform: function(doc, ret) {
+        ret._id = ret._id.toString();
+
+        if (ret.quantity) {
+          ret.quantity = parseFloat(ret.quantity.toString());
+        }
+
+        if (ret.price) {
+          ret.price = parseFloat(ret.price.toString());
+        }
+
+        if (ret.raw_material_id && mongoose.Types.ObjectId.isValid(ret.raw_material_id)) {
+          ret.raw_material_id = ret.raw_material_id.toString();
+        }
+
+        if (ret.raw_material_id && typeof ret.raw_material_id === 'object' && ret.raw_material_id._id) {
+          ret.raw_material = {
+            id: ret.raw_material_id._id.toString(),
+            name: ret.raw_material_id.name,
+            price: ret.raw_material_id.price ? parseFloat(ret.raw_material_id.price.toString()) : null,
+            unit: ret.raw_material_id.unit,
+            category: ret.raw_material_id.category
+          };
+          ret.raw_material_id = ret.raw_material_id.toString();
+        }
+
+        return ret;
+      }
+    },
     toObject: { getters: true },
   }
 );
@@ -66,9 +95,39 @@ const PurchaseOrderSchema = new mongoose.Schema(
     items: [PurchaseOrderItemSchema], // Array of PurchaseOrderItems
   },
   {
-    timestamps: true, // This adds created_at and updated_at automatically
-    toJSON: { getters: true, virtuals: true },
-    toObject: { getters: true, virtuals: true },
+    timestamps: true,
+    toJSON: {
+      transform: function(doc, ret) {
+        ret._id = ret._id.toString();
+        delete ret.__v;
+
+        if (ret.created_by && mongoose.Types.ObjectId.isValid(ret.created_by)) {
+          ret.created_by = ret.created_by.toString();
+        }
+
+        if (ret.created_by && typeof ret.created_by === 'object' && ret.created_by._id) {
+          ret.creator = {
+            id: ret.created_by._id.toString(),
+            name: ret.created_by.name,
+            email: ret.created_by.email
+          };
+          ret.created_by = ret.created_by._id.toString();
+        }
+
+        // Handle items array - they'll be transformed by their own toJSON
+        if (ret.items && Array.isArray(ret.items)) {
+          ret.items = ret.items.map(item => {
+            if (typeof item.toJSON === 'function') {
+              return item.toJSON();
+            }
+            return item;
+          });
+        }
+
+        return ret;
+      }
+    },
+    toObject: { getters: true },
   }
 );
 

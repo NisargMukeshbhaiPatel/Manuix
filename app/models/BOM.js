@@ -4,6 +4,35 @@ import RawMaterial from "@/models/RawMaterial";
 import User from "@/models/User";
 
 // BOMItem Schema (Subdocument)
+const BOMItemToJson = function (doc, ret) {
+  ret._id = ret._id.toString();
+  delete ret.__v;
+  if (ret.quantity) {
+    ret.quantity = Number(ret.quantity.toString());
+  }
+
+  if (
+    ret.raw_material_id &&
+    typeof ret.raw_material_id === "object" &&
+    ret.raw_material_id._id
+  ) {
+    ret.raw_material = {
+      id: ret.raw_material_id._id.toString(),
+      name: ret.raw_material_id.name,
+      price: ret.raw_material_id.price
+        ? parseFloat(ret.raw_material_id.price.toString())
+        : null,
+      unit: ret.raw_material_id.unit,
+      category: ret.raw_material_id.category,
+    };
+    ret.raw_material_id = ret.raw_material_id._id.toString();
+  } else {
+    ret.raw_material_id = ret.raw_material_id.toString();
+  }
+
+  return ret;
+};
+
 const BOMItemSchema = new mongoose.Schema(
   {
     raw_material_id: {
@@ -14,18 +43,19 @@ const BOMItemSchema = new mongoose.Schema(
     quantity: {
       type: mongoose.Schema.Types.Decimal128,
       required: [true, "Quantity is required"],
-      get: (v) => v ? v.toString() : v, // Convert Decimal128 to string when retrieved
     },
   },
   {
     _id: true, // Keep _id for each BOMItem
-    toJSON: { getters: true },
-    toObject: { getters: true },
-  }
+    toJSON: {
+      transform: BOMItemToJson,
+    },
+    oObject: { getters: true },
+  },
 );
 
 // Virtual field to handle decimal display
-BOMItemSchema.virtual('quantityDecimal').get(function() {
+BOMItemSchema.virtual("quantityDecimal").get(function () {
   return this.quantity ? parseFloat(this.quantity.toString()) : 0;
 });
 
@@ -48,68 +78,107 @@ const BOMSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    toJSON: { getters: true },
+    toJSON: {
+      transform: function (doc, ret) {
+        ret._id = ret._id.toString();
+        delete ret.__v;
+
+        if (ret.product_id && mongoose.Types.ObjectId.isValid(ret.product_id)) {
+          ret.product_id = ret.product_id.toString();
+        }
+
+        if (ret.created_by && mongoose.Types.ObjectId.isValid(ret.created_by)) {
+          ret.created_by = ret.created_by.toString();
+        }
+        if (
+          ret.product_id &&
+          typeof ret.product_id === "object" &&
+          ret.product_id._id
+        ) {
+          ret.product = {
+            _id: ret.product_id._id.toString(),
+            name: ret.product_id.name,
+            sku: ret.product_id.sku,
+            price: ret.product_id.price
+              ? parseFloat(ret.product_id.price.toString())
+              : null,
+            category: ret.product_id.category,
+            unit: ret.product_id.unit,
+          };
+          ret.product_id = ret.product_id._id.toString();
+        }
+
+        if (
+          ret.created_by &&
+          typeof ret.created_by === "object" &&
+          ret.created_by._id
+        ) {
+          ret.creator = {
+            id: ret.created_by._id.toString(),
+            name: ret.created_by.name,
+            email: ret.created_by.email,
+          };
+          ret.created_by = ret.created_by._id.toString();
+        }
+
+        // Handle items array - they'll be transformed by their own toJSON
+        if (ret.items && Array.isArray(ret.items)) {
+          ret.items = ret.items.map((item) => BOMItemToJson(null, item));
+        }
+
+        return ret;
+      },
+    },
     toObject: { getters: true },
-  }
+  },
 );
 
-// Method to calculate total raw material cost for this BOM
-BOMSchema.methods.calculateTotalCost = async function() {
-  let total = 0;
-  
-  // Need to populate the raw materials to get their prices
-  await this.populate('items.raw_material_id');
-  
-  for (const item of this.items) {
-    if (item.raw_material_id && item.raw_material_id.price) {
-      const itemQuantity = parseFloat(item.quantity.toString());
-      const materialPrice = parseFloat(item.raw_material_id.price.toString());
-      total += itemQuantity * materialPrice;
-    }
-  }
-  
-  return total;
-};
-
 // Method to check if this BOM has enough raw materials in inventory
-BOMSchema.methods.checkInventoryAvailability = async function(quantity = 1) {
+BOMSchema.methods.checkInventoryAvailability = async function (quantity = 1) {
   const Inventory = mongoose.models.Inventory;
-  if (!Inventory) return { available: false, message: "Inventory model not loaded" };
-  
+  if (!Inventory)
+    return { available: false, message: "Inventory model not loaded" };
+
   const shortages = [];
-  
+
   // Check each raw material
   for (const item of this.items) {
     const requiredQty = parseFloat(item.quantity.toString()) * quantity;
-    const availableQty = await Inventory.getStockLevel('raw_material', item.raw_material_id);
-    
+    const availableQty = await Inventory.getStockLevel(
+      "raw_material",
+      item.raw_material_id,
+    );
+
     if (availableQty < requiredQty) {
       // Need to get the material name
-      await item.populate('raw_material_id');
+      await item.populate("raw_material_id");
       const materialName = item.raw_material_id.name || "Unknown material";
-      
+
       shortages.push({
         materialId: item.raw_material_id._id,
         materialName,
         required: requiredQty,
         available: availableQty,
-        shortage: requiredQty - availableQty
+        shortage: requiredQty - availableQty,
       });
     }
   }
-  
+
   return {
     available: shortages.length === 0,
     shortages,
-    message: shortages.length > 0 ? `Insufficient quantity for ${shortages.length} materials` : "All materials available"
+    message:
+      shortages.length > 0
+        ? `Insufficient quantity for ${shortages.length} materials`
+        : "All materials available",
   };
 };
 
 // Pre-save middleware to make sure all BOMItems have their IDs
-BOMSchema.pre('save', function(next) {
-  if (this.isModified('items')) {
+BOMSchema.pre("save", function (next) {
+  if (this.isModified("items")) {
     // Make sure each item has an _id
-    this.items.forEach(item => {
+    this.items.forEach((item) => {
       if (!item._id) {
         item._id = new mongoose.Types.ObjectId();
       }
@@ -119,11 +188,11 @@ BOMSchema.pre('save', function(next) {
 });
 
 // Automatically populate the raw_material references when accessing BOM
-BOMSchema.pre(/^find/, function(next) {
+BOMSchema.pre(/^find/, function (next) {
   if (this.options && !this.options.lean) {
-    this.populate('product_id')
-        .populate('created_by', 'name email')
-        .populate('items.raw_material_id');
+    this.populate("product_id")
+      .populate("created_by", "name email")
+      .populate("items.raw_material_id");
   }
   next();
 });

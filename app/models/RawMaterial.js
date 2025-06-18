@@ -27,7 +27,32 @@ const RawMaterialSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    toJSON: { getters: true }, // Apply getters during document conversion to JSON
+    toJSON: {
+      transform: function(doc, ret) {
+        ret._id = ret._id.toString();
+        delete ret.__v;
+
+        if (ret.price) {
+          ret.price = parseFloat(ret.price.toString());
+        }
+
+        if (ret.created_by && mongoose.Types.ObjectId.isValid(ret.created_by)) {
+          ret.created_by = ret.created_by.toString();
+        }
+
+        if (ret.created_by && typeof ret.created_by === 'object' && ret.created_by._id) {
+          ret.creator = {
+            id: ret.created_by._id.toString(),
+            name: ret.created_by.name,
+            email: ret.created_by.email
+          };
+          ret.created_by = ret.created_by._id.toString();
+        }
+
+        return ret;
+      }
+    },
+    toObject: { getters: true },
   }
 );
 

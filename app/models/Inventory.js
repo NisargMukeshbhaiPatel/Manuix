@@ -34,7 +34,47 @@ const InventorySchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    toJSON: { getters: true }, // Apply getters during document conversion to JSON
+    toJSON: {
+      transform: function(doc, ret) {
+        ret._id = ret._id.toString();
+        delete ret.__v;
+
+        if (ret.quantity) {
+          ret.quantity = parseFloat(ret.quantity.toString());
+        }
+
+        if (ret.last_updated) {
+          ret.last_updated = ret.last_updated.toISOString();
+        }
+
+        if (ret.item_id && mongoose.Types.ObjectId.isValid(ret.item_id)) {
+          ret.item_id = ret.item_id.toString();
+        }
+
+        if (ret.item_id && typeof ret.item_id === 'object' && ret.item_id._id) {
+          ret.item = {
+            id: ret.item_id._id.toString(),
+            name: ret.item_id.name,
+            type: ret.item_type,
+            ...(ret.item_type === 'product' && {
+              sku: ret.item_id.sku,
+              price: ret.item_id.price ? parseFloat(ret.item_id.price.toString()) : null,
+              category: ret.item_id.category,
+              unit: ret.item_id.unit,
+            }),
+            ...(ret.item_type === 'raw_material' && {
+              price: ret.item_id.price ? parseFloat(ret.item_id.price.toString()) : null,
+              unit: ret.item_id.unit,
+              category: ret.item_id.category
+            })
+          };
+          ret.item_id = ret.item_id._id.toString();
+        }
+
+        return ret;
+      }
+    },
+    toObject: { getters: true },
   }
 );
 

@@ -76,8 +76,66 @@ const NotificationSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
+    toJSON: {
+      transform: function(doc, ret) {
+        ret._id = ret._id.toString();
+        delete ret.__v;
+
+        if (ret.expiry) {
+          ret.expiry = ret.expiry.toISOString();
+        }
+
+        if (ret.user_id && mongoose.Types.ObjectId.isValid(ret.user_id)) {
+          ret.user_id = ret.user_id.toString();
+        }
+
+        if (ret.user_id && typeof ret.user_id === 'object' && ret.user_id._id) {
+          ret.user = {
+            id: ret.user_id._id.toString(),
+            name: ret.user_id.name,
+            email: ret.user_id.email
+          };
+          ret.user_id = ret.user_id._id.toString();
+        }
+
+        if (ret.source_id && mongoose.Types.ObjectId.isValid(ret.source_id)) {
+          ret.source_id = ret.source_id.toString();
+        }
+
+        if (ret.source_id && typeof ret.source_id === 'object' && ret.source_id._id) {
+          ret.source = {
+            id: ret.source_id._id.toString(),
+            type: ret.source_type,
+            // Add relevant fields based on source_type
+            ...(ret.source_type === 'Product' && {
+              name: ret.source_id.name,
+              sku: ret.source_id.sku,
+              status: ret.source_id.status
+            }),
+            ...(ret.source_type === 'RawMaterial' && {
+              name: ret.source_id.name,
+              unit: ret.source_id.unit
+            }),
+            ...(ret.source_type === 'SalesOrder' && {
+              customer_name: ret.source_id.customer_name,
+              status: ret.source_id.status
+            }),
+            ...(ret.source_type === 'PurchaseOrder' && {
+              supplier_name: ret.source_id.supplier_name,
+              status: ret.source_id.status
+            }),
+            ...(ret.source_type === 'Finance' && {
+              type: ret.source_id.type,
+              amount: ret.source_id.amount ? parseFloat(ret.source_id.amount.toString()) : null
+            })
+          };
+          ret.source_id = ret.source_id._id.toString();
+        }
+
+        return ret;
+      }
+    },
+    toObject: { getters: true },
   }
 );
 

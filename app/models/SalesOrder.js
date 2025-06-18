@@ -1,11 +1,13 @@
 import mongoose from "mongoose";
+import User from "@/models/User";
+import Product from "@/models/Product";
 
 // SalesOrderItem Schema (Subdocument)
 const SalesOrderItemSchema = new mongoose.Schema(
   {
     product_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Product",
+      ref: Product.modelName,
       required: [true, "Product is required"],
     },
     quantity: {
@@ -21,7 +23,38 @@ const SalesOrderItemSchema = new mongoose.Schema(
   },
   {
     _id: true, // Keep _id for each SalesOrderItem
-    toJSON: { getters: true },
+    toJSON: {
+      transform: function(doc, ret) {
+        ret._id = ret._id.toString();
+
+        if (ret.quantity) {
+          ret.quantity = parseFloat(ret.quantity.toString());
+        }
+
+        if (ret.price) {
+          ret.price = parseFloat(ret.price.toString());
+        }
+
+        if (ret.product_id && mongoose.Types.ObjectId.isValid(ret.product_id)) {
+          ret.product_id = ret.product_id.toString();
+        }
+
+        if (ret.product_id && typeof ret.product_id === 'object' && ret.product_id._id) {
+          ret.product = {
+            id: ret.product_id._id.toString(),
+            name: ret.product_id.name,
+            sku: ret.product_id.sku,
+            price: ret.product_id.price ? parseFloat(ret.product_id.price.toString()) : null,
+            category: ret.product_id.category,
+            unit: ret.product_id.unit,
+            status: ret.product_id.status
+          };
+          ret.product_id = ret.product_id.toString();
+        }
+
+        return ret;
+      }
+    },
     toObject: { getters: true },
   }
 );
@@ -58,7 +91,7 @@ const SalesOrderSchema = new mongoose.Schema(
     },
     created_by: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: User.modelName,
       required: [true, "Creator reference is required"],
     },
     items: [SalesOrderItemSchema], // Array of SalesOrderItems
@@ -76,8 +109,42 @@ const SalesOrderSchema = new mongoose.Schema(
   },
   {
     timestamps: true, // This adds created_at and updated_at automatically
-    toJSON: { getters: true, virtuals: true },
-    toObject: { getters: true, virtuals: true },
+    toJSON: {
+      transform: function(doc, ret) {
+        ret._id = ret._id.toString();
+        delete ret.__v;
+
+        if (ret.payment_amount) {
+          ret.payment_amount = parseFloat(ret.payment_amount.toString());
+        }
+
+        if (ret.created_by && mongoose.Types.ObjectId.isValid(ret.created_by)) {
+          ret.created_by = ret.created_by.toString();
+        }
+
+        if (ret.created_by && typeof ret.created_by === 'object' && ret.created_by._id) {
+          ret.creator = {
+            id: ret.created_by._id.toString(),
+            name: ret.created_by.name,
+            email: ret.created_by.email
+          };
+          ret.created_by = ret.created_by._id.toString();
+        }
+
+        // Handle items array - they'll be transformed by their own toJSON
+        if (ret.items && Array.isArray(ret.items)) {
+          ret.items = ret.items.map(item => {
+            if (typeof item.toJSON === 'function') {
+              return item.toJSON();
+            }
+            return item;
+          });
+        }
+
+        return ret;
+      }
+    },
+    toObject: { getters: true },
   }
 );
 
