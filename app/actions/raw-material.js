@@ -1,25 +1,16 @@
 "use server";
 
 import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/db";
 import RawMaterial from "@/models/RawMaterial";
-import { authOptions } from "@/api/auth/[...nextauth]/route";
 
 /**
  * Get all raw materials with pagination and filtering
  */
 export async function getRawMaterials({ page = 1, limit = 10, name = null } = {}) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
     
@@ -68,15 +59,6 @@ export async function getRawMaterials({ page = 1, limit = 10, name = null } = {}
  */
 export async function getRawMaterialById(id) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 
@@ -115,19 +97,11 @@ export async function getRawMaterialById(id) {
  */
 export async function createRawMaterial(materialData) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 
     // Add the user ID who created the raw material
+    const session = await getServerSession(authOptions);
     materialData.created_by = session.user.id;
 
     // Create a new raw material
@@ -155,15 +129,6 @@ export async function createRawMaterial(materialData) {
  */
 export async function updateRawMaterial(id, materialData) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 
@@ -203,15 +168,6 @@ export async function updateRawMaterial(id, materialData) {
  */
 export async function deleteRawMaterial(id) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 

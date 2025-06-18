@@ -1,10 +1,10 @@
 "use server";
 
 import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/db";
 import Notification from "@/models/Notification";
-import { authOptions } from "@/api/auth/[...nextauth]/route";
 
 /**
  * Get all notifications with pagination and filtering
@@ -17,17 +17,9 @@ export async function getNotifications({
   type = null
 } = {}) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
+    const session = await getServerSession(authOptions);
     
     // Create the query - include user_id to get only notifications for current user
     const query = { user_id: session.user.id };

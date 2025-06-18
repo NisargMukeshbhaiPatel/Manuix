@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/db";
 import Finance from "@/models/Finance";
-import { authOptions } from "@/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 /**
  * Get all financial transactions with pagination and filtering
@@ -19,15 +19,6 @@ export async function getFinanceTransactions({
   refId = null
 } = {}) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
     
@@ -96,15 +87,6 @@ export async function getFinanceTransactions({
  */
 export async function getFinanceSummary({ startDate, endDate } = {}) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 
@@ -170,15 +152,6 @@ export async function getFinanceSummary({ startDate, endDate } = {}) {
  */
 export async function getFinanceTransactionById(id) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 
@@ -212,19 +185,11 @@ export async function getFinanceTransactionById(id) {
  */
 export async function createFinanceTransaction(transactionData) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 
     // Add the user ID who created the transaction
+    const session = await getServerSession(authOptions);
     transactionData.created_by = session.user.id;
 
     // Create a new transaction
@@ -255,15 +220,6 @@ export async function createFinanceTransaction(transactionData) {
  */
 export async function updateFinanceTransaction(id, transactionData) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 
@@ -306,15 +262,6 @@ export async function updateFinanceTransaction(id, transactionData) {
  */
 export async function deleteFinanceTransaction(id) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 

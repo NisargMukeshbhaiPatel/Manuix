@@ -1,10 +1,10 @@
 "use server";
 
 import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/db";
 import PurchaseOrder from "@/models/PurchaseOrder";
-import { authOptions } from "@/api/auth/[...nextauth]/route";
 
 /**
  * Get all purchase orders with pagination and filtering
@@ -18,15 +18,6 @@ export async function getPurchaseOrders({
   endDate = null
 } = {}) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
     
@@ -92,15 +83,6 @@ export async function getPurchaseOrders({
  */
 export async function getPurchaseOrderStats({ period = 'month' } = {}) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 
@@ -186,15 +168,6 @@ export async function getPurchaseOrderStats({ period = 'month' } = {}) {
  */
 export async function getPurchaseOrderById(id) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 
@@ -229,18 +202,9 @@ export async function getPurchaseOrderById(id) {
  */
 export async function createPurchaseOrder(orderData) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
-
+    const session = await getServerSession(authOptions);
     // Add the user ID who created the purchase order
     orderData.created_by = session.user.id;    // Calculate total amount if not provided
     if (!orderData.total_amount && orderData.items && orderData.items.length > 0) {
@@ -278,15 +242,6 @@ export async function createPurchaseOrder(orderData) {
  */
 export async function updatePurchaseOrder(id, orderData) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();    // Calculate total amount if items are being updated
     if (orderData.items && orderData.items.length > 0) {
@@ -356,15 +311,6 @@ export async function updatePurchaseOrder(id, orderData) {
  */
 export async function deletePurchaseOrder(id) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 

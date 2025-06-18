@@ -1,25 +1,16 @@
 "use server";
 
-import { getServerSession } from "next-auth/next";
 import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/db";
 import Inventory from "@/models/Inventory";
-import { authOptions } from "@/api/auth/[...nextauth]/route";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 /**
  * Get all inventory items with pagination and filtering
  */
 export async function getInventoryItems({ page = 1, limit = 10, itemType = null, lowStock = false } = {}) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
     
@@ -80,15 +71,6 @@ export async function getInventoryItems({ page = 1, limit = 10, itemType = null,
  */
 export async function getInventoryItemById(id) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 
@@ -121,17 +103,9 @@ export async function getInventoryItemById(id) {
  */
 export async function updateInventory({ itemType, itemId, quantity, operation = 'add' }) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
+    const session = await getServerSession(authOptions);
 
     // Validate required fields
     if (!itemType || !itemId || quantity === undefined) {
@@ -192,15 +166,6 @@ export async function updateInventory({ itemType, itemId, quantity, operation = 
  */
 export async function deleteInventoryItem(id) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 

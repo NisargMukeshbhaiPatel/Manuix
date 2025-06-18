@@ -1,10 +1,10 @@
 "use server";
 
 import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/db";
 import SalesOrder from "@/models/SalesOrder";
-import { authOptions } from "@/api/auth/[...nextauth]/route";
 
 /**
  * Get all sales orders with pagination and filtering
@@ -19,15 +19,6 @@ export async function getSalesOrders({
   endDate = null
 } = {}) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
     
@@ -99,15 +90,6 @@ export async function getSalesOrders({
  */
 export async function getSalesOrderStats({ period = 'month' } = {}) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 
@@ -195,15 +177,6 @@ export async function getSalesOrderStats({ period = 'month' } = {}) {
  */
 export async function getSalesOrderById(id) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 
@@ -238,18 +211,9 @@ export async function getSalesOrderById(id) {
  */
 export async function createSalesOrder(orderData) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
-
+    const session = await getServerSession(authOptions);
     // Add the user ID who created the sales order
     orderData.created_by = session.user.id;    // Calculate total amount if not provided
     if (!orderData.total_amount && orderData.items && orderData.items.length > 0) {
@@ -287,15 +251,6 @@ export async function createSalesOrder(orderData) {
  */
 export async function updateSalesOrder(id, orderData) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();    // Calculate total amount if items are being updated
     if (orderData.items && orderData.items.length > 0) {
@@ -365,15 +320,6 @@ export async function updateSalesOrder(id, orderData) {
  */
 export async function updateSalesOrderPayment(id, paymentData) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 
@@ -386,7 +332,7 @@ export async function updateSalesOrderPayment(id, paymentData) {
         message: "Sales order not found",
       };
     }
-    
+    const session = await getServerSession(authOptions);
     // Record the payment
     const result = await salesOrder.recordPayment({
       amount: paymentData.amount,
@@ -425,15 +371,6 @@ export async function updateSalesOrderPayment(id, paymentData) {
  */
 export async function deleteSalesOrder(id) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 

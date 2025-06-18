@@ -4,22 +4,13 @@ import { getServerSession } from "next-auth/next";
 import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/db";
 import BOM from "@/models/BOM";
-import { authOptions } from "@/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 /**
  * Get all BOMs with pagination and filtering
  */
 export async function getBOMs({ page = 1, limit = 10, productId = null } = {}) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
     
@@ -71,15 +62,6 @@ export async function getBOMs({ page = 1, limit = 10, productId = null } = {}) {
  */
 export async function getBOMById(id) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 
@@ -115,17 +97,9 @@ export async function getBOMById(id) {
  */
 export async function createBOM(bomData) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
+    const session = await getServerSession(authOptions);
 
     // Add the user ID who created the BOM
     bomData.created_by = session.user.id;
@@ -160,15 +134,6 @@ export async function createBOM(bomData) {
  */
 export async function updateBOM(id, bomData) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 
@@ -213,15 +178,6 @@ export async function updateBOM(id, bomData) {
  */
 export async function deleteBOM(id) {
   try {
-    // Authenticate the user
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return { 
-        success: false, 
-        message: "Unauthorized" 
-      };
-    }
-
     // Connect to the database
     await dbConnect();
 
