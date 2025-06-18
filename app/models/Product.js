@@ -6,7 +6,8 @@ const ProductSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please provide a product name"],
       maxlength: [100, "Product name cannot be more than 100 characters"],
-    },    sku: {
+    },
+    sku: {
       type: String,
       required: [true, "Please provide a SKU"],
       unique: true,
@@ -24,7 +25,6 @@ const ProductSchema = new mongoose.Schema(
     price: {
       type: mongoose.Schema.Types.Decimal128,
       required: [true, "Please provide a sale price"],
-      get: (v) => v ? v.toString() : v, // Convert Decimal128 to string when retrieved
     },
     created_by: {
       type: mongoose.Schema.Types.ObjectId,
@@ -34,17 +34,16 @@ const ProductSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    toJSON: { getters: true }, // Apply getters during document conversion to JSON
-  }
+    toJSON: {
+      transform: (doc, ret) => {
+        ret._id = ret._id.toString();
+        ret.created_by = ret.created_by.toString();
+        ret.price = Number(ret.price);
+        return ret;
+      },
+    },
+  },
 );
-
-// Add unique index for SKU only - name already has index:true in schema definition
-ProductSchema.index({ sku: 1 }, { unique: true });
-
-// Virtual field to handle decimal display since Decimal128 can sometimes be tricky in JavaScript
-ProductSchema.virtual('priceDecimal').get(function() {
-  return this.price ? parseFloat(this.price.toString()) : 0;
-});
 
 // Method to check if this product is in inventory
 ProductSchema.methods.isInInventory = async function() {
