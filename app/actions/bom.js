@@ -179,7 +179,7 @@ export const deleteBOM = withDelete(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
-
+    
     // Find the BOM by ID
     const bom = await BOM.findById(id);
     
@@ -193,9 +193,8 @@ export const deleteBOM = withDelete(async (id) => {
     // Check if the BOM is currently in use
     // (This would depend on your business logic, could check if product is in use)
     
-    // Delete the BOM
-    await bom.remove();
-
+    await bom.deleteOne();
+    
     return {
       success: true,
       message: "BOM deleted successfully",
