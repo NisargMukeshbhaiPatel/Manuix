@@ -1,23 +1,15 @@
-import * as React from "react";
 import { cva } from "class-variance-authority";
-
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "rounded-full inline-flex items-center px-[11px] py-0.5 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-950 focus:ring-offset-2 dark:focus:ring-neutral-300",
+  "rounded-md inline-flex items-center px-[11px] py-0.5 text-sm font-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-2 border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-1px]",
   {
     variants: {
       variant: {
-        default:
-          "bg-white text-gray-900 hover:shadow-md transition-all ",
-        primary:
-          "bg-neutral-900 text-neutral-50 shadow hover:bg-neutral-900/80 dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-50/80",
-        secondary:
-          "bg-neutral-300 text-neutral-900 hover:shadow-lg dark:bg-neutral-800 dark:text-neutral-50 transition-all",
-        destructive:
-          "bg-red-500 text-neutral-50 shadow hover:bg-red-500/80 dark:bg-red-900 dark:text-neutral-50 dark:hover:bg-red-900/80",
-        outline:
-          "border border-accent-foreground text-neutral-950 dark:text-neutral-50",
+        default: "",
+        outline: "bg-white-300 text-black",
+        success: "bg-green-400 text-black",
+        warning: "bg-yellow-400 text-black",
       },
     },
     defaultVariants: {
