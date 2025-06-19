@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getProducts } from "@/actions/product";
+import { formatDate, formatPrice } from "@/lib/utils";
 
 import { Button } from "@/components/button";
 import {
@@ -22,12 +23,12 @@ import {
   Trash2,
 } from "lucide-react";
 import { Skeleton } from "@/components/skeleton";
-import ProductViewModal from "./product-view-modal";
-import ProductEditModal from "./product-edit-modal";
-import SearchInput from "./search-input";
+import ProductViewModal from "./components/product-view-modal";
+import ProductEditModal from "./components/product-edit-modal";
+import SearchInput from "./components/search-input";
 
-import CreateProductModal from "./create-product-modal";
-import DeleteConfirmationDialog from "./delete-confirmation-dialog";
+import CreateProductModal from "./components/create-product-modal";
+import DeleteConfirmationDialog from "./components/delete-confirmation-dialog";
 
 export default function ProductsTable() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -60,23 +61,6 @@ export default function ProductsTable() {
     setIsDeleteDialogOpen(true);
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(price);
-  };
-
   const handleSearchChange = (value) => {
     setSearchTerm(value);
     setCurrentPage(1); // Reset to first page when searching
@@ -101,37 +85,33 @@ export default function ProductsTable() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Products
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Total: {data?.pagination.total || "¯\\_(ツ)_/¯"}
-              </p>
-            </div>
-            <div className="w-full sm:w-80">
-              <SearchInput
-                value={searchTerm}
-                onChange={handleSearchChange}
-                placeholder="Product Name"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="shrink-0"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Create Product
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Products
+          </CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Total: {data?.pagination.total || "¯\\_(ツ)_/¯"}
+          </p>
+        </div>
+        <div className="w-full sm:w-80">
+          <SearchInput
+            value={searchTerm}
+            onChange={handleSearchChange}
+            placeholder="Product Name"
+          />
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="shrink-0"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Create Product
+          </Button>
+        </div>
+      </div>
 
       {/* Products Grid */}
       {isLoading ? (

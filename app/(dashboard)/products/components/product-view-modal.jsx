@@ -8,26 +8,10 @@ import {
 import { Badge } from "@/components/badge";
 import { Separator } from "@/components/separator";
 import { Package, Calendar, User, DollarSign } from "lucide-react";
+import { formatPrice, formatDate } from "@/lib/utils";
 
 export default function ProductViewModal({ product, isOpen, onClose }) {
   if (!product) return null;
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(price);
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

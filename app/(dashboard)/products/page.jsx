@@ -1,7 +1,7 @@
 import getQueryClient from "@/lib/query-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getProducts } from "@/actions/product";
-import ProductsTable from "./components/products-table.jsx";
+import ProductsTable from "./products-table.jsx";
 import requirePageAccess from "@/lib/requirePageAccess";
 
 export default async function ProductsPage() {
