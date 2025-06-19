@@ -1,18 +1,19 @@
 import * as React from "react"
-
 import { cn } from "@/lib/utils"
 import { Minus } from "lucide-react"
 
 const Table = React.forwardRef(({ className, ...props }, ref) => (
+  <div className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-md overflow-hidden">
     <table
       ref={ref}
       className={cn("w-full caption-bottom text-sm", className)}
       {...props} />
+  </div>
 ))
 Table.displayName = "Table"
 
 const TableHeader = React.forwardRef(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("[&_tr]:border-b", className)} {...props} />
+  <thead ref={ref} className={cn("[&_tr]:border-b-4 [&_tr]:border-black", className)} {...props} />
 ))
 TableHeader.displayName = "TableHeader"
 
@@ -28,7 +29,7 @@ const TableFooter = React.forwardRef(({ className, ...props }, ref) => (
   <tfoot
     ref={ref}
     className={cn(
-      "border-t bg-neutral-100/50 font-medium [&>tr]:last:border-b-0 dark:bg-neutral-800/50",
+      "border-t-4 border-black bg-white font-bold [&>tr]:last:border-b-0",
       className
     )}
     {...props} />
@@ -39,7 +40,7 @@ const TableRow = React.forwardRef(({ className, ...props }, ref) => (
   <tr
     ref={ref}
     className={cn(
-      "border-b border-b-accent-foreground transition-colors hover:bg-neutral-100/50 data-[state=selected]:bg-neutral-100 dark:hover:bg-neutral-800/50 dark:data-[state=selected]:bg-neutral-800",
+      "border-b-2 border-black transition-colors hover:bg-gray-50 data-[state=selected]:bg-green-400 data-[state=selected]:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]",
       className
     )}
     {...props} />
@@ -50,7 +51,7 @@ const TableHead = React.forwardRef(({ className, ...props }, ref) => (
   <th
     ref={ref}
     className={cn(
-      "h-10 px-2 text-left align-middle font-medium text-neutral-500 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] dark:text-neutral-400",
+      "h-12 px-4 text-left align-middle font-black text-black uppercase tracking-wider border-r-2 border-black last:border-r-0 bg-green-400 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
       className
     )}
     {...props} />
@@ -61,12 +62,12 @@ const TableCell = React.forwardRef(({ className, children, ...props }, ref) => (
   <td
     ref={ref}
     className={cn(
-      "p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+      "p-4 align-middle font-medium border-r-2 border-black last:border-r-0 bg-white [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
       className
     )}
     {...props}
   >
-    {children || <Minus size={26} />}
+    {children || <Minus size={26} className="stroke-[3px]" />}
   </td>
 ))
 TableCell.displayName = "TableCell"
@@ -74,7 +75,7 @@ TableCell.displayName = "TableCell"
 const TableCaption = React.forwardRef(({ className, ...props }, ref) => (
   <caption
     ref={ref}
-    className={cn("mt-4 text-sm text-neutral-500 dark:text-neutral-400", className)}
+    className={cn("mt-4 text-sm font-bold text-black uppercase tracking-wide", className)}
     {...props} />
 ))
 TableCaption.displayName = "TableCaption"
