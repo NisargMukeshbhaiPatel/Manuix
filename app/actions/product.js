@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Product from "@/models/Product";
+import BOM from "@/models/BOM";
 import { createCollectionRBAC } from "@/lib/rbac";
 
 const { withCreate, withRead, withUpdate, withDelete } = createCollectionRBAC("products");

@@ -1,6 +1,6 @@
 import getQueryClient from "@/lib/query-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
-import { getFinance } from "@/actions/finance";
+import { getFinanceTransactions } from "@/actions/finance";
 import requirePageAccess from "@/lib/requirePageAccess";
 
 export default async function FinancePage() {
@@ -12,9 +12,9 @@ export default async function FinancePage() {
   
   await queryClient.prefetchQuery({
     queryKey: ["finance"],
-    queryFn: () => getFinance(),
+    queryFn: () => getFinanceTransactions(),
   });
-  console.log(await getFinance());
+  console.log(await getFinanceTransactions());
 
   return (
     <div className="space-y-4">

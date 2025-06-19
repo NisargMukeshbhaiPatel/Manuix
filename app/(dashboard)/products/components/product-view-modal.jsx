@@ -45,7 +45,7 @@ export default function ProductViewModal({ product, isOpen, onClose }) {
           {/* Description */}
           <div className="space-y-2">
             <h3 className="font-semibold">Description</h3>
-            <p className="text-muted-foreground leading-relaxed">
+            <p className="leading-relaxed">
               {product.description}
             </p>
           </div>
@@ -56,20 +56,20 @@ export default function ProductViewModal({ product, isOpen, onClose }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <DollarSign className="h-4 w-4" />
                 <div>
                   <p className="text-sm font-medium">Price</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm">
                     {formatPrice(product.price)} per {product.unit}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <Package className="h-4 w-4 text-muted-foreground" />
+                <Package className="h-4 w-4" />
                 <div>
                   <p className="text-sm font-medium">Unit</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm">
                     {product.unit}
                   </p>
                 </div>
@@ -78,20 +78,20 @@ export default function ProductViewModal({ product, isOpen, onClose }) {
 
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <User className="h-4 w-4 text-muted-foreground" />
+                <User className="h-4 w-4" />
                 <div>
                   <p className="text-sm font-medium">Created By</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm">
                     {product.created_by}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <Calendar className="h-4 w-4" />
                 <div>
                   <p className="text-sm font-medium">Product ID</p>
-                  <p className="text-sm text-muted-foreground font-mono">
+                  <p className="text-sm font-mono">
                     {product._id}
                   </p>
                 </div>
@@ -105,13 +105,13 @@ export default function ProductViewModal({ product, isOpen, onClose }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
               <p className="font-medium">Created At</p>
-              <p className="text-muted-foreground">
+              <p>
                 {formatDate(product.createdAt)}
               </p>
             </div>
             <div>
               <p className="font-medium">Last Updated</p>
-              <p className="text-muted-foreground">
+              <p>
                 {formatDate(product.updatedAt)}
               </p>
             </div>

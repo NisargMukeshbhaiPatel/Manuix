@@ -1,20 +1,20 @@
 import getQueryClient from "@/lib/query-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
-import { getInventory } from "@/actions/inventory";
+import { getInventoryItems } from "@/actions/inventory";
 import requirePageAccess from "@/lib/requirePageAccess";
 
 export default async function InventoryPage() {
   await requirePageAccess({
-    inventories: ["read"]
+    inventories: ["read"],
   });
 
   const queryClient = getQueryClient();
-  
+
   await queryClient.prefetchQuery({
     queryKey: ["inventory"],
-    queryFn: () => getInventory(),
+    queryFn: () => getInventoryItems(),
   });
-  console.log(await getInventory());
+  console.log(await getInventoryItems());
 
   return (
     <div className="space-y-4">
@@ -24,4 +24,4 @@ export default async function InventoryPage() {
       </HydrationBoundary>
     </div>
   );
-} 
+}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import getQueryClient from "@/lib/query-client";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/select";
-import { Plus, Save, X } from "lucide-react";
+import { Save, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { createProduct } from "@/actions/product";
 import { useQueryClient } from "@tanstack/react-query";
@@ -90,12 +91,41 @@ export default function CreateProductModal({ isOpen, onClose }) {
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            Create New Product
+            New Product
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Main CTA for creating with BOM */}
+        <div className="mb-4">
+          <Link href="/bom/create">
+            <Button
+              type="button"
+              className="w-full"
+              disabled={isLoading}
+              onClick={handleClose}
+            >
+              Create Product with BOM
+            </Button>
+          </Link>
+          <p className="text-sm text-muted-foreground mt-2 text-center">
+            Recommended: Create a complete product with BOM (can be added later
+            as well)
+          </p>
+        </div>
+
+        {/* Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t-2" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Or create product only
+            </span>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="create-name">Product Name *</Label>
@@ -108,7 +138,6 @@ export default function CreateProductModal({ isOpen, onClose }) {
                 disabled={isLoading}
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="create-sku">SKU *</Label>
               <Input
@@ -121,7 +150,6 @@ export default function CreateProductModal({ isOpen, onClose }) {
               />
             </div>
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="create-description">Description *</Label>
             <Textarea
@@ -134,7 +162,6 @@ export default function CreateProductModal({ isOpen, onClose }) {
               disabled={isLoading}
             />
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="unit">Unit</Label>
@@ -147,7 +174,6 @@ export default function CreateProductModal({ isOpen, onClose }) {
                 required
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="create-price">Price ($) *</Label>
               <Input
@@ -168,7 +194,6 @@ export default function CreateProductModal({ isOpen, onClose }) {
               />
             </div>
           </div>
-
           <DialogFooter className="gap-2">
             <Button
               type="button"
@@ -176,11 +201,16 @@ export default function CreateProductModal({ isOpen, onClose }) {
               onClick={handleClose}
               disabled={isLoading}
             >
-              <X className="h-4 w-4 mr-1" />
+              <X className="h-4 w-4" />
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              <Save className="h-4 w-4 mr-1" />
+            <Button
+              type="submit"
+              variant="outline"
+              className="w-full"
+              disabled={isLoading}
+            >
+              <Save className="h-4 w-4" />
               {isLoading ? "Creating..." : "Create Product"}
             </Button>
           </DialogFooter>

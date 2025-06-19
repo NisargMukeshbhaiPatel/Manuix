@@ -1,7 +1,7 @@
 import getQueryClient from "@/lib/query-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getProducts } from "@/actions/product";
-import ProductsTable from "./products-table.jsx";
+import ProductsList from "./products-list.jsx";
 import requirePageAccess from "@/lib/requirePageAccess";
 
 export default async function ProductsPage() {
@@ -21,7 +21,7 @@ export default async function ProductsPage() {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <ProductsTable />
+      <ProductsList />
     </HydrationBoundary>
   );
 }

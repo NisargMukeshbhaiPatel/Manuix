@@ -96,7 +96,7 @@ export default function ProductEditModal({
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="">
               <Label htmlFor="name">Product Name</Label>
               <Input
                 id="name"
@@ -107,7 +107,7 @@ export default function ProductEditModal({
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="">
               <Label htmlFor="sku">SKU</Label>
               <Input
                 id="sku"
@@ -119,7 +119,7 @@ export default function ProductEditModal({
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
@@ -132,7 +132,7 @@ export default function ProductEditModal({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="">
               <Label htmlFor="unit">Unit</Label>
               <Input
                 id="price"
@@ -144,7 +144,7 @@ export default function ProductEditModal({
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="">
               <Label htmlFor="price">Price ($)</Label>
               <Input
                 id="price"

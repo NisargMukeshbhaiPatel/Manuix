@@ -1,15 +1,19 @@
 import getQueryClient from "@/lib/query-client";
+import { Plus } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/button";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getBOMs } from "@/actions/bom";
 import requirePageAccess from "@/lib/requirePageAccess";
+import BOMManagementPage from "./bom-management";
 
 export default async function BOMPage() {
   await requirePageAccess({
-    boms: ["read"]
+    boms: ["read"],
   });
 
   const queryClient = getQueryClient();
-  
+
   await queryClient.prefetchQuery({
     queryKey: ["boms"],
     queryFn: () => getBOMs(),
@@ -18,10 +22,18 @@ export default async function BOMPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Bill of Materials</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Bill of Materials</h1>
+        <Link href="/bom/create">
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            Create BOM
+          </Button>
+        </Link>
+      </div>
       <HydrationBoundary state={dehydrate(queryClient)}>
-        BILL OF MATERIALS
+        <BOMManagementPage />
       </HydrationBoundary>
     </div>
   );
-} 
+}

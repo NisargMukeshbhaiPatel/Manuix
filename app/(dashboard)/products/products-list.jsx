@@ -117,7 +117,7 @@ export default function ProductsTable() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 9 }).map((_, i) => (
-            <Card key={i}>
+            <div className="border border-muted-background rounded-md" key={i}>
               <CardHeader>
                 <Skeleton className="h-6 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
@@ -140,7 +140,7 @@ export default function ProductsTable() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </div>
           ))}
         </div>
       ) : data?.data.length === 0 ? (
@@ -183,17 +183,15 @@ export default function ProductsTable() {
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
                     <CardTitle className="text-lg">{product.name}</CardTitle>
-                    <Badge variant="outline" className="w-fit">
-                      {product.sku}
-                    </Badge>
+                    <Badge className="w-fit">{product.sku}</Badge>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-primary">
                       {formatPrice(product.price)}
                     </div>
-                    <Badge variant="secondary" className="text-xs">
+                    <div className="text-xs text-muted-foreground">
                       per {product.unit}
-                    </Badge>
+                    </div>
                   </div>
                 </div>
               </CardHeader>
