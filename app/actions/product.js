@@ -201,3 +201,38 @@ export const deleteProduct = withDelete(async (id) => {
     };
   }
 });
+
+export const getProductsWithoutBOM = withRead(async ({ name = null } = {}) => {
+  try {
+    // Connect to the database
+    await dbConnect();
+    
+    // First, get all product IDs that have BOMs
+    const productsWithBOMs = await BOM.distinct('product_id');
+    
+    // Create the query to exclude products that have BOMs
+    const query = {
+      _id: { $nin: productsWithBOMs }
+    };
+    
+    // Apply name filter if provided
+    if (name) {
+      query.name = { $regex: name, $options: "i" }; // Case-insensitive search
+    }
+    
+    // Retrieve all products without BOMs
+    const products = await Product.find(query)
+      .sort({ createdAt: -1 }); // Sort by newest first
+    
+    return {
+      success: true,
+      data: products.map((p) => p.toJSON()),
+    };
+  } catch (error) {
+    console.error("Error fetching products without BOMs:", error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+});
