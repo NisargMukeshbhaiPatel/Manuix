@@ -26,13 +26,23 @@ export const getInventoryItems = withRead(async ({ page = 1, limit = 10, itemTyp
 
     // Apply low stock filter if requested
     if (lowStock) {
-      // Define low stock as items with quantity below threshold (5 for products, 10 for raw materials)
-      query.$expr = {
-        $lt: [
-          "$quantity", 
-          { $cond: [{ $eq: ["$item_type", "product"] }, 5, 10] }
-        ]
-      };
+      if (itemType === 'product') {
+        query.quantity = { $lt: 5 };
+      } else if (itemType === 'raw_material') {
+        query.quantity = { $lt: 10 };
+      } else {
+        // If no specific itemType is provided, use $or for both types
+        query.$or = [
+          {
+            item_type: "product",
+            quantity: { $lt: 5 }
+          },
+          {
+            item_type: "raw_material", 
+            quantity: { $lt: 10 }
+          }
+        ];
+      }
     }
 
     // Calculate skip for pagination
