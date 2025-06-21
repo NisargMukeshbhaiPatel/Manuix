@@ -6,6 +6,10 @@ import EditBOMForm from "./edit-bom-form.jsx";
 import requirePageAccess from "@/lib/requirePageAccess";
 
 export default async function EditBOMPage({ params }) {
+  await requirePageAccess({
+    boms: ["update"],
+  });
+
   const { _id: bomId } = params;
   const queryClient = getQueryClient();
 
