@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/db";
 import Inventory from "@/models/Inventory";
 import { getServerSession } from "next-auth/next";
@@ -104,7 +103,7 @@ export const getInventoryItemById = withRead(async (id) => {
 /**
  * Update inventory levels (add, remove, or set quantity)
  */
-export const updateInventory = withUpdate(async ({ itemType, itemId, quantity, operation = 'add' }) => {
+export const updateInventory = withUpdate(async ({ itemType, itemId, quantity, operation = 'set' }) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -146,10 +145,6 @@ export const updateInventory = withUpdate(async ({ itemType, itemId, quantity, o
     // Populate the item reference
     await result.populate('item_id');
 
-    // Revalidate inventory cache
-    revalidatePath('/inventory');
-    revalidatePath(`/inventory/${result._id}`);
-
     return {
       success: true,
       data: result.toJSON(),
@@ -181,9 +176,6 @@ export const deleteInventoryItem = withDelete(async (id) => {
         message: "Inventory item not found",
       };
     }
-
-    // Revalidate inventory cache
-    revalidatePath('/inventory');
 
     return {
       success: true,
