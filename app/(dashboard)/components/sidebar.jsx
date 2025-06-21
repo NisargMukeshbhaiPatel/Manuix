@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import {
-  Shield,
+  ShieldUser as Shield,
   LayoutDashboard,
   PackageSearch,
   Boxes,
@@ -31,6 +31,7 @@ import {
   useSidebar,
 } from "@/components/sidebar";
 
+const GreenShield = () => <Shield className="text-green-500" />;
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
   { icon: PackageSearch, label: "Products", href: "/products" },
@@ -40,7 +41,7 @@ const navItems = [
   { icon: ShoppingCart, label: "Sales Orders", href: "/sales-orders" },
   { icon: PackagePlus, label: "Purchase Orders", href: "/purchases" },
   { icon: Banknote, label: "Finance", href: "/finance" },
-  // { icon: Users, label: "Management", href: "/" },
+  { icon: GreenShield, label: "User Management", href: "/user-management" },
 ];
 
 export default function DashSidebar() {
@@ -84,15 +85,15 @@ export default function DashSidebar() {
                     border-2 border-black rounded-md mb-2
                     ${
                       isActive
-                        ? "bg-yellow-300 shadow-[4px_4px_0px_0px_#000]"
-                        : "hover:bg-gray-100 hover:shadow-[4px_4px_0px_0px_#000]"
+                        ? "shadow-[4px_4px_0px_0px_#000]"
+                        : "hover:bg-gray-200 hover:shadow-[4px_4px_0px_0px_#000]"
                     }
                   `}
                   tooltip={state === "collapsed" ? item.label : undefined}
                 >
                   <Link
                     href={item.href}
-                    className="flex items-center gap-3 p-2"
+                    className="flex items-center p-2"
                   >
                     <item.icon />
                     {state === "expanded" && (

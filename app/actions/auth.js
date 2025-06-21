@@ -33,61 +33,16 @@ export async function registerUser(formData) {
       name,
       email,
       password,
+      role: "user",//only admin can change
     });
 
     return {
       success: true,
       message: "User created successfully",
-      user: {
-        id: user._id.toString(),
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: user.toJSON(),
     };
   } catch (error) {
     console.error("Registration error:", error);
     return { error: "Internal server error" };
-  }
-}
-
-export async function getUserById(userId) {
-  try {
-    await dbConnect();
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return { error: "User not found" };
-    }
-
-    return {
-      success: true,
-      user: user.toJSON(),
-    };
-  } catch (error) {
-    console.error("Get user error:", error);
-    return { error: "Failed to fetch user" };
-  }
-}
-
-export async function updateUser(userId, updateData) {
-  try {
-    await dbConnect();
-    const user = await User.findByIdAndUpdate(userId, updateData, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!user) {
-      return { error: "User not found" };
-    }
-
-    return {
-      success: true,
-      user: user.toJSON(),
-    };
-  } catch (error) {
-    console.error("Update user error:", error);
-    return { error: "Failed to update user" };
   }
 }
