@@ -232,7 +232,7 @@ export default function InventoryManagement() {
       </div>
 
       {/* Pagination */}
-      {data?.pagination && (
+      {data?.pagination && data?.data.length > data.limit && (
         <div className="mt-4">
           <Pagination
             currentPage={data.pagination.page}
