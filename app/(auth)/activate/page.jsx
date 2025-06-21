@@ -7,21 +7,23 @@ import { Button } from "@/components/button";
 import { Input } from "@/components/input";
 import { Label } from "@/components/label";
 import { toast } from "@/hooks/use-toast";
-import { registerUser } from "@/actions/auth";
+import { activateUserAccount } from "@/actions/user";
+import { useSearchParams } from "next/navigation";
 import ManuixLogo from "@/components/logo";
 import { Eye, EyeOff, Check } from "lucide-react";
 
-export default function RegisterPage() {
+export default function UserActivatePage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
     password: "",
     confirmPassword: "",
     agreeToTerms: false,
   });
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
   const router = useRouter();
 
   const handleInputChange = (field, value) => {
@@ -32,7 +34,6 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
 
-    // Check if passwords match
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Passwords do not match",
@@ -42,15 +43,13 @@ export default function RegisterPage() {
       return;
     }
 
-    // Create FormData object to match the old component's format
     const submitFormData = new FormData();
+    submitFormData.append("token", token);
     submitFormData.append("name", formData.name);
-    submitFormData.append("email", formData.email);
     submitFormData.append("password", formData.password);
-    submitFormData.append("confirmPassword", formData.confirmPassword);
 
     try {
-      const result = await registerUser(submitFormData);
+      const result = await activateUserAccount(submitFormData);
       if (result.error) {
         toast({
           title: result.error,
@@ -58,22 +57,21 @@ export default function RegisterPage() {
         });
       } else {
         toast({
-          title: "Account created successfully! Signing you in...",
-          variant: "default",
+          title: "Account activated successfully! Signing you in...",
         });
         try {
           const signInResult = await signIn("credentials", {
-            email: formData.email,
+            email: result.email,
             password: formData.password,
             redirect: false,
           });
-
           if (signInResult?.error) {
             throw signInResult.error;
           } else {
             router.push("/");
           }
         } catch (signInError) {
+					console.error(signInError)
           toast({
             title:
               "Account created but auto-login failed. Please login manually.",
@@ -102,10 +100,9 @@ export default function RegisterPage() {
           </h1>
         </div>
 
-        {/* Register Form */}
         <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] p-8 mb-6">
           <h2 className="text-2xl font-black text-black mb-6 text-center">
-            CREATE ACCOUNT
+            ACTIVATE YOUR ACCOUNT
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -117,19 +114,6 @@ export default function RegisterPage() {
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 placeholder="John Doe"
-                required
-                disabled={loading}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                placeholder="john@company.com"
                 required
                 disabled={loading}
               />
@@ -226,14 +210,6 @@ export default function RegisterPage() {
               {loading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
-        </div>
-
-        {/* Login Link */}
-        <div className="bg-orange-400 border-4 border-black shadow-[8px_8px_0px_0px_#000] p-6 text-center">
-          <p className="text-black font-bold mb-3">Already have an account?</p>
-          <Link href="/login">
-            <Button variant="outline">Sign In</Button>
-          </Link>
         </div>
       </div>
     </div>

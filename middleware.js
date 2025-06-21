@@ -4,10 +4,10 @@ import { LOGIN, REGISTER, DASHBOARD } from "@/constants/page-routes";
 
 export async function middleware(req) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  const isLoggedIn = !!token;
+  const isLoggedIn = !!token?.id;
 
   const path = req.nextUrl.pathname;
-  const isAuthPage = path === LOGIN || path === REGISTER;
+  const isAuthPage = path === LOGIN || path === REGISTER || path === "/activate";
 
   if (isAuthPage) {
     if (isLoggedIn) {
