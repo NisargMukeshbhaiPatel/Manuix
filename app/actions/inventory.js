@@ -134,6 +134,16 @@ export const updateInventory = withUpdate(async ({ itemType, itemId, quantity, o
     // If it's an adjustment (add/remove quantity), we use the updateStock static method
     else {
       const change = operation === 'remove' ? -parseFloat(quantity) : parseFloat(quantity);
+      const newQuantity = currentQuantity + change;
+      
+      // Prevent negative stock
+      if (newQuantity < 0) {
+        return {
+          success: false,
+          error: `Cannot subtract ${quantity}. Current stock is ${currentQuantity}. This would result in negative inventory.`,
+        };
+      }
+      
       result = await Inventory.updateStock(
         itemType, 
         itemId, 
@@ -141,10 +151,10 @@ export const updateInventory = withUpdate(async ({ itemType, itemId, quantity, o
         { userId: session.user.id }
       );
     }
-
+    
     // Populate the item reference
     await result.populate('item_id');
-
+    
     return {
       success: true,
       data: result.toJSON(),
@@ -153,7 +163,6 @@ export const updateInventory = withUpdate(async ({ itemType, itemId, quantity, o
     console.error("Error updating inventory:", error);
     return {
       success: false,
-      message: "Failed to update inventory",
       error: error.message,
     };
   }
@@ -173,7 +182,7 @@ export const deleteInventoryItem = withDelete(async (id) => {
     if (!inventoryItem) {
       return {
         success: false,
-        message: "Inventory item not found",
+        error: "Inventory item not found",
       };
     }
 
