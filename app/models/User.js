@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose" 
 import bcrypt from "bcryptjs";
-import { roles } from "@/lib/rbac";
+import { roles } from "@/constants/rbac";
 
 const UserSchema = new mongoose.Schema(
   {
@@ -18,7 +18,10 @@ const UserSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "Please provide a password"],
+      required: function () {
+        // Password is required only if no token exists (user is activated)
+        return !this.activationToken;
+      },
       minlength: [6, "Password must be at least 6 characters"],
       select: false, // don't include password in queries by default
     },
@@ -27,18 +30,25 @@ const UserSchema = new mongoose.Schema(
       enum: roles,
       default: "user",
     },
-
-    // isVerified: {
-    //   type: Boolean,
-    //   default: false,
-    // },
-    // avatar: {
-    //   type: String,
-    //   default: null,
-    // },
+    activationToken: {
+      type: String,
+      default: null,
+      select: false,
+    },
   },
   {
     timestamps: true,
+
+    toJSON: {
+      transform: function (doc, ret) {
+        delete ret.password;
+        delete ret.__v;
+        delete ret.activationToken;
+        ret.id = ret._id.toString();
+        ret._id = ret._id.toString();
+        return ret;
+      },
+    },
   },
 );
 
@@ -58,13 +68,6 @@ UserSchema.pre("save", async function (next) {
 // Compare password method
 UserSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
-};
-
-UserSchema.methods.toJSON = function () {
-  const userObject = this.toObject();
-  // remove the password field so it won't be exposed in API responses
-  delete userObject.password;
-  return userObject;
 };
 
 export default mongoose.models.User || mongoose.model("User", UserSchema);
