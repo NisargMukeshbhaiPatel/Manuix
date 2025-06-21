@@ -1,29 +1,29 @@
+import requirePageAccess from "@/lib/requirePageAccess";
+import dynamic from "next/dynamic";
 import getQueryClient from "@/lib/query-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getRawMaterials } from "@/actions/raw-material";
-import requirePageAccess from "@/lib/requirePageAccess";
 
-export default async function RawMaterialsPage() {
-  // Protect the page with appropriate permissions
+import RawMaterialsPage from "./raw-materials-page";
+
+export default async function Page() {
   await requirePageAccess({
     rawmaterials: ["read"],
   });
-
   const queryClient = getQueryClient();
 
-  await queryClient.prefetchQuery({
-    queryKey: ["rawMaterials"],
-    queryFn: () => getRawMaterials(),
-  });
-  console.log(await getRawMaterials());
+  try {
+    await queryClient.prefetchQuery({
+      queryKey: ["rawMaterials", 1, ""],
+      queryFn: () => getRawMaterials({ page: 1, name: "" }),
+    });
+  } catch (error) {
+    return error.message;
+  }
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold">Raw Materials</h1>
-        RAW MATERIALS
-      </div>
+      <RawMaterialsPage />
     </HydrationBoundary>
   );
 }
-

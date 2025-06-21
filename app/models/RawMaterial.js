@@ -17,7 +17,6 @@ const RawMaterialSchema = new mongoose.Schema(
     price: {
       type: mongoose.Schema.Types.Decimal128,
       required: [true, "Please provide a default purchase price"],
-      get: (v) => v ? v.toString() : v, // Convert Decimal128 to string when retrieved
     },
     created_by: {
       type: mongoose.Schema.Types.ObjectId,
@@ -36,19 +35,17 @@ const RawMaterialSchema = new mongoose.Schema(
           ret.price = parseFloat(ret.price.toString());
         }
 
-        if (ret.created_by && mongoose.Types.ObjectId.isValid(ret.created_by)) {
+        // if (ret.reated_by && typeof ret.created_by === 'object' && ret.created_by._id) {
+        //   ret.creator = {
+        //     id: ret.created_by._id.toString(),
+        //     name: ret.created_by.name,
+        //     email: ret.created_by.email
+        //   };
+        //   ret.created_by = ret.created_by._id.toString();
+        // } else {
           ret.created_by = ret.created_by.toString();
-        }
-
-        if (ret.created_by && typeof ret.created_by === 'object' && ret.created_by._id) {
-          ret.creator = {
-            id: ret.created_by._id.toString(),
-            name: ret.created_by.name,
-            email: ret.created_by.email
-          };
-          ret.created_by = ret.created_by._id.toString();
-        }
-
+        // }
+        //
         return ret;
       }
     },
