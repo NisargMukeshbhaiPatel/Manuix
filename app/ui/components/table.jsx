@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils"
 import { Minus } from "lucide-react"
 
 const Table = React.forwardRef(({ className, ...props }, ref) => (
-  <div className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-md overflow-hidden">
+  <div className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-md overflow-hidden overflow-x-auto">
     <table
       ref={ref}
       className={cn("w-full caption-bottom text-sm", className)}
