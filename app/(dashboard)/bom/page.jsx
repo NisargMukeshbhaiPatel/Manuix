@@ -15,10 +15,9 @@ export default async function BOMPage() {
   const queryClient = getQueryClient();
 
   await queryClient.prefetchQuery({
-    queryKey: ["boms"],
-    queryFn: () => getBOMs(),
+    queryKey: ["boms", 1],
+    queryFn: () => getBOMs(1),
   });
-  console.log(await getBOMs());
 
   return (
     <div className="space-y-4">

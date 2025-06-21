@@ -1,5 +1,6 @@
 "use client";
 
+import { Textarea } from "@/components/textarea";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -8,11 +9,11 @@ import {
   ArrowLeft,
   Plus,
   Search,
-  X,
   Package,
   ShoppingCart,
   Save,
   User,
+  Trash2,
   Minus,
 } from "lucide-react";
 import { Button } from "@/components/button";
@@ -52,21 +53,28 @@ import {
 import { Skeleton } from "@/components/skeleton";
 import { updateBOM, getBOMById } from "@/actions/bom";
 import { createRawMaterial, getRawMaterials } from "@/actions/raw-material";
-import { getInitials, formatDate, formatPrice } from "@/lib/utils";
+import { formatDate, formatPrice } from "@/lib/utils";
 
 export default function EditBOMTable() {
   const router = useRouter();
   const params = useParams();
   const queryClient = getQueryClient();
-  const bomId = params.id;
-
-  const [productData, setProductData] = useState({
-    name: "",
-    sku: "",
-    price: 0,
-    unit: "piece",
+  const bomId = params._id;
+  // prefetched
+  const { data: bomData, isLoading: bomLoading } = useQuery({
+    queryKey: ["bom", bomId],
+    queryFn: () => getBOMById(bomId),
   });
-  const [bomItems, setBomItems] = useState([]);
+  const bom = bomData?.success ? bomData.data : [];
+
+  const [productData, setProductData] = useState(bom.product);
+  const [bomItems, setBomItems] = useState(bom.items);
+  const { data: response = [], isLoading: materialsLoading } = useQuery({
+    queryKey: ["raw-materials"],
+    queryFn: getRawMaterials,
+  });
+  const rawMaterials = response?.success ? response.data : [];
+
   const [materialSearchTerm, setMaterialSearchTerm] = useState("");
   const [isNewMaterialModalOpen, setIsNewMaterialModalOpen] = useState(false);
 
@@ -77,45 +85,11 @@ export default function EditBOMTable() {
     unit: "piece",
   });
 
-  // Fetch BOM by ID
-  const {
-    data: bom,
-    isLoading: bomLoading,
-    error,
-  } = useQuery({
-    queryKey: ["bom", bomId],
-    queryFn: () => getBOMById(bomId),
-  });
-
-  // Fetch raw materials
-  const { data: rawMaterials = [], isLoading: materialsLoading } = useQuery({
-    queryKey: ["raw-materials"],
-    queryFn: getRawMaterials,
-  });
-
-  // Initialize form data when BOM is loaded
-  useEffect(() => {
-    if (bom) {
-      setProductData({
-        name: bom.product.name,
-        sku: bom.product.sku,
-        price: bom.product.price,
-        unit: bom.product.unit,
-      });
-      setBomItems(
-        bom.items.map((item) => ({
-          raw_material: item.raw_material,
-          quantity: item.quantity,
-        })),
-      );
-    }
-  }, [bom]);
-
   const updateBOMMutation = useMutation({
-    mutationFn: ({ id, data }) => updateBOM(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["boms"] });
+    mutationFn: ({ id, data, product }) => updateBOM(id, data, product),
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ["bom", bomId] });
+      await queryClient.invalidateQueries({ queryKey: ["boms"] });
       router.push("/bom");
     },
   });
@@ -135,30 +109,33 @@ export default function EditBOMTable() {
 
   const addMaterialToBOM = (material) => {
     const existingItem = bomItems.find(
-      (item) => item.raw_material.id === material.id,
+      (item) => item.raw_material_id === material._id,
     );
     if (existingItem) {
       setBomItems((prev) =>
         prev.map((item) =>
-          item.raw_material.id === material.id
+          item.raw_material_id === material._id
             ? { ...item, quantity: item.quantity + 1 }
             : item,
         ),
       );
     } else {
-      setBomItems((prev) => [...prev, { raw_material: material, quantity: 1 }]);
+      setBomItems((prev) => [
+        ...prev,
+        { raw_material_id: material._id, raw_material: material, quantity: 1 },
+      ]);
     }
   };
 
   const updateItemQuantity = (materialId, quantity) => {
     if (quantity <= 0) {
       setBomItems((prev) =>
-        prev.filter((item) => item.raw_material.id !== materialId),
+        prev.filter((item) => item.raw_material_id !== materialId),
       );
     } else {
       setBomItems((prev) =>
         prev.map((item) =>
-          item.raw_material.id === materialId ? { ...item, quantity } : item,
+          item.raw_material_id === materialId ? { ...item, quantity } : item,
         ),
       );
     }
@@ -166,7 +143,7 @@ export default function EditBOMTable() {
 
   const removeItem = (materialId) => {
     setBomItems((prev) =>
-      prev.filter((item) => item.raw_material.id !== materialId),
+      prev.filter((item) => item.raw_material_id !== materialId),
     );
   };
 
@@ -174,16 +151,16 @@ export default function EditBOMTable() {
     if (!bom || bomItems.length === 0) return;
 
     const bomData = {
-      product: {
-        _id: bom.product._id,
-        ...productData,
-      },
       items: bomItems,
     };
 
     updateBOMMutation.mutate({
       id: bomId,
       data: bomData,
+      product: {
+        _id: bom.product_id,
+        data: productData,
+      },
     });
   };
 
@@ -194,7 +171,7 @@ export default function EditBOMTable() {
 
   if (bomLoading) {
     return (
-    <div className="space-y-6">
+      <div className="space-y-6">
         <div className="flex items-center gap-4">
           <Button variant="outline" onClick={() => router.push("/bom")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -210,37 +187,11 @@ export default function EditBOMTable() {
     );
   }
 
-  if (error || !bom) {
-    return (
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={() => router.push("/bom")}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to BOMs
-          </Button>
-          <h1 className="text-3xl font-bold">Edit Bill of Materials</h1>
-        </div>
-        <Card>
-          <CardContent className="text-center py-12">
-            <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p className="text-lg font-medium text-destructive">
-              BOM not found or error loading data
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              The BOM you're looking for might have been deleted or you don't
-              have access to it.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-wrap gap-4 items-center justify-between">
+        <div className="flex flex-wrap items-center gap-4">
           <Button variant="outline" onClick={() => router.push("/bom")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to BOMs
@@ -248,33 +199,7 @@ export default function EditBOMTable() {
           <div className="flex items-center gap-3">
             <div>
               <h1 className="text-3xl font-bold">Edit Bill of Materials</h1>
-              <p className="text-muted-foreground">
-                Update BOM for {productData.name}
-              </p>
             </div>
-            {/* Creator Avatar with Tooltip */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Avatar className="w-10 h-10 cursor-help">
-                    <AvatarFallback className="text-sm">
-                      {getInitials(bom.creator.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div className="text-center">
-                    <div className="font-medium">{bom.creator.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {bom.creator.email}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Created {formatDate(bom.createdAt)}
-                    </div>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
         </div>
         {bomItems.length > 0 && (
@@ -305,6 +230,22 @@ export default function EditBOMTable() {
                 placeholder="Enter product name"
               />
             </div>
+            <div className="">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={productData.description}
+                onChange={(e) =>
+                  setProductData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+                placeholder="Product description"
+                rows={2}
+                required
+              />
+            </div>
             <div>
               <Label htmlFor="productSku">SKU</Label>
               <Input
@@ -333,23 +274,20 @@ export default function EditBOMTable() {
                 />
               </div>
               <div>
-                <Label htmlFor="productUnit">Unit</Label>
-                <Select
+                <Label htmlFor="unit">Unit</Label>
+                <Input
+                  id="unit"
+                  type="text"
                   value={productData.unit}
-                  onValueChange={(value) =>
-                    setProductData((prev) => ({ ...prev, unit: value }))
+                  onChange={(e) =>
+                    setProductData((prev) => ({
+                      ...prev,
+                      unit: e.target.value,
+                    }))
                   }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="piece">Piece</SelectItem>
-                    <SelectItem value="kg">Kg</SelectItem>
-                    <SelectItem value="liter">Liter</SelectItem>
-                    <SelectItem value="meter">Meter</SelectItem>
-                  </SelectContent>
-                </Select>
+                  placeholder="e.g Piece/Kg/L"
+                  required
+                />
               </div>
             </div>
           </CardContent>
@@ -358,19 +296,19 @@ export default function EditBOMTable() {
         {/* Raw Materials Selection */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            <CardTitle className="flex flex-wrap items-center justify-between">
+              <div className="shrink-0 flex items-center gap-2">
                 <ShoppingCart className="h-5 w-5" />
-                Add Components
+                Add Materials
               </div>
               <Dialog
                 open={isNewMaterialModalOpen}
                 onOpenChange={setIsNewMaterialModalOpen}
               >
                 <DialogTrigger asChild>
-                  <Button size="sm">
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Material
+                  <Button className="w-fit">
+                    <Plus className="w-4 h-4" />
+                    New
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -452,18 +390,16 @@ export default function EditBOMTable() {
               </Dialog>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <CardContent className="space-y-4 px-0">
+            <div className="relative px-4">
               <Input
                 placeholder="Search materials..."
                 value={materialSearchTerm}
                 onChange={(e) => setMaterialSearchTerm(e.target.value)}
-                className="pl-10"
               />
             </div>
 
-            <div className="space-y-2 max-h-64 overflow-y-auto">
+            <div className="space-y-2 max-h-64 px-4 overflow-y-auto">
               {materialsLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <Skeleton key={i} className="h-16 w-full" />
@@ -476,21 +412,25 @@ export default function EditBOMTable() {
               ) : (
                 filteredMaterials.map((material) => (
                   <div
-                    key={material.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors"
+                    key={material._id}
+                    className="p-4 border-2 rounded-md border-black cursor-pointer transform transition-transform bg-white hover:bg-gray-100"
                   >
-                    <div>
-                      <p className="font-medium">{material.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatPrice(material.price)} / {material.unit}
-                      </p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-black text-lg text-black uppercase">
+                          {material.name}
+                        </p>
+                        <p className="text-sm font-bold text-black">
+                          {formatPrice(material.price)} / {material.unit}
+                        </p>
+                      </div>
+                      <Button
+                        className="w-fit"
+                        onClick={() => addMaterialToBOM(material)}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
                     </div>
-                    <Button
-                      size="sm"
-                      onClick={() => addMaterialToBOM(material)}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
                   </div>
                 ))
               )}
@@ -504,7 +444,7 @@ export default function EditBOMTable() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <div>BOM Components ({bomItems.length})</div>
+              <div>BOM Materials ({bomItems.length})</div>
               <Badge variant="secondary" className="text-lg">
                 Total: {formatPrice(totalCost)}
               </Badge>
@@ -523,7 +463,7 @@ export default function EditBOMTable() {
               </TableHeader>
               <TableBody>
                 {bomItems.map((item) => (
-                  <TableRow key={item.raw_material.id}>
+                  <TableRow key={item.raw_material_id}>
                     <TableCell>
                       <div>
                         <div className="font-medium">
@@ -543,10 +483,11 @@ export default function EditBOMTable() {
                       <div className="flex items-center gap-2">
                         <Button
                           size="sm"
+                          className="mb-1"
                           variant="outline"
                           onClick={() =>
                             updateItemQuantity(
-                              item.raw_material.id,
+                              item.raw_material_id,
                               item.quantity - 1,
                             )
                           }
@@ -560,7 +501,7 @@ export default function EditBOMTable() {
                           value={item.quantity}
                           onChange={(e) =>
                             updateItemQuantity(
-                              item.raw_material.id,
+                              item.raw_material_id,
                               parseFloat(e.target.value) || 0,
                             )
                           }
@@ -569,9 +510,10 @@ export default function EditBOMTable() {
                         <Button
                           size="sm"
                           variant="outline"
+                          className="mb-1"
                           onClick={() =>
                             updateItemQuantity(
-                              item.raw_material.id,
+                              item.raw_material_id,
                               item.quantity + 1,
                             )
                           }
@@ -587,11 +529,12 @@ export default function EditBOMTable() {
                     </TableCell>
                     <TableCell>
                       <Button
-                        variant="ghost"
                         size="sm"
-                        onClick={() => removeItem(item.raw_material.id)}
+                        className="mb-1"
+                        variant="destructive"
+                        onClick={() => removeItem(item.raw_material_id)}
                       >
-                        <X className="w-4 h-4 text-destructive" />
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </TableCell>
                   </TableRow>

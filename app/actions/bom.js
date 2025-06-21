@@ -7,6 +7,7 @@ import { authOptions } from "@/lib/auth";
 import { createCollectionRBAC } from "@/lib/rbac";
 
 const { withCreate, withRead, withUpdate, withDelete } = createCollectionRBAC("boms");
+import { updateProduct } from "@/actions/product";
 
 /**
  * Get all BOMs with pagination and filtering
@@ -114,9 +115,6 @@ export const createBOM = withCreate(async (bomData) => {
     await bom.populate('created_by', 'name email');
     await bom.populate('items.raw_material_id');
 
-    // Revalidate the BOMs cache
-    revalidatePath('/bom');
-
     return {
       success: true,
       data: bom.toJSON(),
@@ -134,7 +132,7 @@ export const createBOM = withCreate(async (bomData) => {
 /**
  * Update an existing BOM
  */
-export const updateBOM = withUpdate(async (id, bomData) => {
+export const updateBOM = withUpdate(async (id, bomData, product) => {
   try {
     // Connect to the database
     await dbConnect();
@@ -144,6 +142,9 @@ export const updateBOM = withUpdate(async (id, bomData) => {
       new: true, // Return the updated document
       runValidators: true, // Run mongoose validation
     });
+    if (product) {
+      await updateProduct(product._id, product.data);
+    }
 
     if (!bom) {
       return {
@@ -151,7 +152,6 @@ export const updateBOM = withUpdate(async (id, bomData) => {
         message: "BOM not found",
       };
     }
-    
     // Populate references for the response
     await bom.populate('product_id');
     await bom.populate('created_by', 'name email');
