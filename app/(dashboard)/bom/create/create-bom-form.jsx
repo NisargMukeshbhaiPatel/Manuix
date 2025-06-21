@@ -31,9 +31,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/select";
+
+import CreateProductModal from "@/(dashboard)/products/components/create-product-modal";
+
 import { Skeleton } from "@/components/skeleton";
 import { createBOM } from "@/actions/bom";
-import { createProduct } from "@/actions/product";
+import { createProduct, getProductsWithoutBOM } from "@/actions/product";
 import { createRawMaterial, getRawMaterials } from "@/actions/raw-material";
 import { formatPrice } from "@/lib/utils";
 import {
@@ -47,7 +50,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 
-export default function CreateBOMForm({ products }) {
+export default function CreateBOMForm() {
   const router = useRouter();
   const queryClient = getQueryClient();
 
@@ -73,21 +76,33 @@ export default function CreateBOMForm({ products }) {
     unit: "piece",
   });
 
-  // Fetch raw materials
-  const { res, isLoading: materialsLoading } = useQuery({
+  const {
+    data: resProd,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["products-without-bom"],
+    queryFn: getProductsWithoutBOM,
+  });
+  const products = resProd?.success ? resProd.data : [];
+
+  const { data: resMaterials, isLoading: materialsLoading } = useQuery({
     queryKey: ["raw-materials"],
     queryFn: getRawMaterials,
   });
-  const rawMaterials = res?.success ? response.data : [];
-  console.log("RESM", res);
+  const rawMaterials = resMaterials?.success ? resMaterials.data : [];
 
   // Create BOM mutation
   const createBOMMutation = useMutation({
     mutationFn: createBOM,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (!data.success) throw new Error(data.error);
       queryClient.invalidateQueries({ queryKey: ["boms"] });
       queryClient.invalidateQueries({ queryKey: ["products-without-bom"] });
       router.push("/bom");
+    },
+    onError: (e) => {
+      console.error(e);
     },
   });
 
@@ -95,10 +110,14 @@ export default function CreateBOMForm({ products }) {
   const createProductMutation = useMutation({
     mutationFn: createProduct,
     onSuccess: (data) => {
+      if (!data.success) throw new Error(data.error);
       queryClient.invalidateQueries({ queryKey: ["products-without-bom"] });
       setSelectedProduct(data.product);
       setNewProduct({ name: "", sku: "", price: 0, unit: "piece" });
       setIsNewProductModalOpen(false);
+    },
+    onError: (e) => {
+      console.error(e);
     },
   });
 
@@ -106,9 +125,13 @@ export default function CreateBOMForm({ products }) {
   const createMaterialMutation = useMutation({
     mutationFn: createRawMaterial,
     onSuccess: () => {
+      if (!data.success) throw new Error(data.error);
       queryClient.invalidateQueries({ queryKey: ["raw-materials"] });
       setNewMaterial({ name: "", price: 0, unit: "piece" });
       setIsNewMaterialModalOpen(false);
+    },
+    onError: (e) => {
+      console.error(e);
     },
   });
 
@@ -163,8 +186,11 @@ export default function CreateBOMForm({ products }) {
     if (!selectedProduct || bomItems.length === 0) return;
 
     const bomData = {
-      product: selectedProduct,
-      items: bomItems,
+      product_id: selectedProduct._id,
+      items: bomItems.map((item) => ({
+        raw_material_id: item.raw_material._id,
+        quantity: item.quantity,
+      })),
     };
 
     createBOMMutation.mutate(bomData);
@@ -179,25 +205,22 @@ export default function CreateBOMForm({ products }) {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <Button
             variant="outline"
             size="sm"
             onClick={() => router.push("/bom")}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to BOMs
+            Back to BOM
           </Button>
           <div>
             <h1 className="text-3xl font-bold">Create Bill of Materials</h1>
-            <p className="text-muted-foreground">
-              Create a new BOM by selecting a product and adding raw materials
-            </p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         {/* Left Column - Product Selection */}
         <div className="space-y-6">
           {/* Product Selection */}
@@ -219,101 +242,21 @@ export default function CreateBOMForm({ products }) {
                     className="pl-8"
                   />
                 </div>
-                <Dialog
-                  open={isNewProductModalOpen}
-                  onOpenChange={setIsNewProductModalOpen}
+                <Button
+                  variant="outline"
+                  onClick={() => setIsNewProductModalOpen(true)}
                 >
-                  <DialogTrigger asChild>
-                    <Button variant="outline">
-                      <Plus className="h-4 w-4 mr-2" />
-                      New Product
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Create New Product</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="product-name">Product Name</Label>
-                        <Input
-                          id="product-name"
-                          value={newProduct.name}
-                          onChange={(e) =>
-                            setNewProduct({
-                              ...newProduct,
-                              name: e.target.value,
-                            })
-                          }
-                          placeholder="Enter product name"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="product-sku">SKU</Label>
-                        <Input
-                          id="product-sku"
-                          value={newProduct.sku}
-                          onChange={(e) =>
-                            setNewProduct({
-                              ...newProduct,
-                              sku: e.target.value,
-                            })
-                          }
-                          placeholder="Enter SKU"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="product-price">Price</Label>
-                        <Input
-                          id="product-price"
-                          type="number"
-                          step="0.01"
-                          value={newProduct.price}
-                          onChange={(e) =>
-                            setNewProduct({
-                              ...newProduct,
-                              price: parseFloat(e.target.value) || 0,
-                            })
-                          }
-                          placeholder="Enter price"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="product-unit">Unit</Label>
-                        <Select
-                          value={newProduct.unit}
-                          onValueChange={(value) =>
-                            setNewProduct({ ...newProduct, unit: value })
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="piece">Piece</SelectItem>
-                            <SelectItem value="kg">Kg</SelectItem>
-                            <SelectItem value="liter">Liter</SelectItem>
-                            <SelectItem value="meter">Meter</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <Button
-                        onClick={() => createProductMutation.mutate(newProduct)}
-                        disabled={
-                          createProductMutation.isPending || !newProduct.name
-                        }
-                        className="w-full"
-                      >
-                        {createProductMutation.isPending
-                          ? "Creating..."
-                          : "Create Product"}
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Product
+                </Button>
               </div>
+              <CreateProductModal
+                isOpen={isNewProductModalOpen}
+                withBom={true}
+                onClose={() => setIsNewProductModalOpen(false)}
+              />
 
-              <div className="space-y-3 max-h-60 overflow-y-auto pl-4 pr-2">
+              <div className="space-y-3 max-h-80 overflow-y-auto pl-4 pr-2">
                 {filteredProducts.length === 0 ? (
                   <div className="text-center py-8 text-black font-bold text-lg border-2 rounded-md border-black bg-white">
                     NO PRODUCTS FOUND
@@ -357,8 +300,8 @@ export default function CreateBOMForm({ products }) {
                 Raw Materials
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
+            <CardContent className="space-y-4 px-0">
+              <div className="flex gap-2 px-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -414,23 +357,20 @@ export default function CreateBOMForm({ products }) {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="material-unit">Unit</Label>
-                        <Select
+                        <Label htmlFor="unit">Unit</Label>
+                        <Input
+                          id="unit"
+                          type="text"
                           value={newMaterial.unit}
-                          onValueChange={(value) =>
-                            setNewMaterial({ ...newMaterial, unit: value })
+                          onChange={(e) =>
+                            setNewMaterial({
+                              ...newMaterial,
+                              unit: e.target.value,
+                            })
                           }
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="piece">Piece</SelectItem>
-                            <SelectItem value="kg">Kg</SelectItem>
-                            <SelectItem value="liter">Liter</SelectItem>
-                            <SelectItem value="meter">Meter</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          placeholder="e.g Piece/Kg/L"
+                          required
+                        />
                       </div>
                       <Button
                         onClick={() =>
@@ -450,7 +390,7 @@ export default function CreateBOMForm({ products }) {
                 </Dialog>
               </div>
 
-              <div className="space-y-2 max-h-60 overflow-y-auto">
+              <div className="space-y-2 max-h-80 overflow-y-auto pl-4 pr-2">
                 {materialsLoading ? (
                   Array.from({ length: 3 }).map((_, i) => (
                     <Skeleton key={i} className="h-12 w-full" />
@@ -463,20 +403,24 @@ export default function CreateBOMForm({ products }) {
                   filteredMaterials.map((material) => (
                     <div
                       key={material._id}
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors"
+                      className="p-4 border-2 rounded-md border-black cursor-pointer transform transition-transform bg-white hover:bg-gray-100"
                     >
-                      <div>
-                        <p className="font-medium">{material.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatPrice(material.price)} / {material.unit}
-                        </p>
+                      <div className="flex items-center justify-between">
+                        <div className="shrink-0">
+                          <p className="font-black text-lg text-black uppercase">
+                            {material.name}
+                          </p>
+                          <p className="text-sm font-bold text-black">
+                            {formatPrice(material.price)} / {material.unit}
+                          </p>
+                        </div>
+                        <Button
+                          className="w-fit px-2"
+                          onClick={() => addMaterialToBOM(material)}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Button
-                        size="sm"
-                        onClick={() => addMaterialToBOM(material)}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
                     </div>
                   ))
                 )}
@@ -485,7 +429,7 @@ export default function CreateBOMForm({ products }) {
           </Card>
         </div>
 
-        {/* Right Column - BOM Items */}
+        {/*  BOM Items */}
         <div>
           <Card>
             <CardHeader>
@@ -585,10 +529,11 @@ export default function CreateBOMForm({ products }) {
                           <TableCell>
                             <Button
                               size="sm"
-                              variant="ghost"
+                              className="mb-1"
+                              variant="destructive"
                               onClick={() => removeItem(item.raw_material._id)}
                             >
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </TableCell>
                         </TableRow>

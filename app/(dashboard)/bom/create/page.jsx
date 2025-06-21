@@ -14,18 +14,11 @@ export default async function CreateBOMPage() {
 
   const queryClient = getQueryClient();
 
-  let products;
   try {
-    // Prefetch raw materials
-    const res = await getProductsWithoutBOM();
-    if (!res.success) throw new Error(res.error);
-    products = res.data;
-
     await queryClient.prefetchQuery({
       queryKey: ["raw-materials"],
       queryFn: getRawMaterials,
     });
-    // Prefetch products without BOM
     await queryClient.prefetchQuery({
       queryKey: ["products-without-bom"],
       queryFn: getProductsWithoutBOM,
@@ -36,7 +29,7 @@ export default async function CreateBOMPage() {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <CreateBOMForm products={products} />
+      <CreateBOMForm />
     </HydrationBoundary>
   );
 }

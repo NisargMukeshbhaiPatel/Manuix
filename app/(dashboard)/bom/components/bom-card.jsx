@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import getQueryClient from "@/lib/query-client";
 import { useMutation } from "@tanstack/react-query";
 import { Eye, Edit, Trash2, DollarSign, Calendar, Hash } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/avatar";
@@ -30,28 +32,42 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/alert-dialog";
+import { toast } from "@/hooks/use-toast";
 import { deleteBOM } from "@/actions/bom";
 import { getInitials, formatDate } from "@/lib/utils";
 
 export function BOMCard({ bom, onView, onSuccess }) {
+  const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteBOM,
-    onSuccess: () => {
-      onSuccess();
-    },
-    onError: (error) => {
-      console.error("Error deleting BOM:", error);
-    },
-    onSettled: () => {
-      setIsDeleting(false);
-    },
-  });
+  const queryClient = getQueryClient();
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    deleteMutation.mutate(bom._id);
+    try {
+      const result = await deleteBOM(bom._id);
+      if (result.success) {
+        toast({
+          title: "Product deleted",
+        });
+        queryClient.setQueryData("boms", (oldData) => {
+          if (!oldData) return;
+          return {
+            ...oldData,
+            data: oldData.data.filter((b) => b._id !== bom._id),
+          };
+        });
+        onSuccess();
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      toast({
+        title: error.message || "Failed to delete product. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const totalCost = bom.items.reduce((sum, item) => {
@@ -62,18 +78,16 @@ export function BOMCard({ bom, onView, onSuccess }) {
 
   const handleEdit = () => {
     // Navigate to edit page instead of opening modal
-    window.location.href = `/bom/edit/${bom._id}`;
+    router.push(`/bom/edit/${bom._id}`);
   };
 
   return (
-    <Card>
+    <Card className="flex flex-col">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <div className="space-y-1">
             <CardTitle className="text-lg">{bom.product.name}</CardTitle>
-            <Badge className="text-xs">
-              {bom.product.sku}
-            </Badge>
+            <Badge className="text-xs">{bom.product.sku}</Badge>
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold text-primary">
@@ -92,7 +106,9 @@ export function BOMCard({ bom, onView, onSuccess }) {
             <Hash className="w-4 h-4 text-muted-foreground" />
             <div>
               <div className="text-sm font-medium">{totalComponents}</div>
-              <div className="text-xs text-muted-foreground">Components</div>
+              <div className="text-xs text-muted-foreground">
+                {totalComponents > 1 ? "Materials" : "Material"}
+              </div>
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -139,7 +155,7 @@ export function BOMCard({ bom, onView, onSuccess }) {
         </div>
       </CardContent>
 
-      <CardFooter className="gap-4 mt-auto flex flex-wrap">
+      <CardFooter className="mt-auto gap-4 mt-auto flex flex-wrap">
         <Button
           variant="outline"
           size="sm"

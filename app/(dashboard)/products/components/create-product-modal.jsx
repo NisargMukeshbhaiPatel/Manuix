@@ -26,7 +26,7 @@ import { toast } from "@/hooks/use-toast";
 import { createProduct } from "@/actions/product";
 import { useQueryClient } from "@tanstack/react-query";
 
-export default function CreateProductModal({ isOpen, onClose }) {
+export default function CreateProductModal({ isOpen, onClose, withBom }) {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     name: "",
@@ -64,6 +64,7 @@ export default function CreateProductModal({ isOpen, onClose }) {
         throw new Error(result.error);
       }
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["products-without-bom"] });
       toast({
         title: "Product created",
       });
@@ -96,34 +97,37 @@ export default function CreateProductModal({ isOpen, onClose }) {
         </DialogHeader>
 
         {/* Main CTA for creating with BOM */}
-        <div className="mb-4">
-          <Link href="/bom/create">
-            <Button
-              type="button"
-              className="w-full"
-              disabled={isLoading}
-              onClick={handleClose}
-            >
-              Create Product with BOM
-            </Button>
-          </Link>
-          <p className="text-sm text-muted-foreground mt-2 text-center">
-            Recommended: Create a complete product with BOM (can be added later
-            as well)
-          </p>
-        </div>
-
-        {/* Divider */}
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t-2" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or create product only
-            </span>
-          </div>
-        </div>
+        {!withBom && (
+          <>
+            <div className="mb-4">
+              <Link href="/bom/create">
+                <Button
+                  type="button"
+                  className="w-full"
+                  disabled={isLoading}
+                  onClick={handleClose}
+                >
+                  Create Product with BOM
+                </Button>
+              </Link>
+              <p className="text-sm text-muted-foreground mt-2 text-center">
+                Recommended: Create a complete product with BOM (can be added
+                later as well)
+              </p>
+            </div>
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t-2" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or create product only
+                </span>
+              </div>
+            </div>
+          </>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -166,7 +170,7 @@ export default function CreateProductModal({ isOpen, onClose }) {
             <div className="space-y-2">
               <Label htmlFor="unit">Unit</Label>
               <Input
-                id="price"
+                id="unit"
                 type="text"
                 value={formData.unit}
                 onChange={(e) => handleInputChange("unit", e.target.value)}

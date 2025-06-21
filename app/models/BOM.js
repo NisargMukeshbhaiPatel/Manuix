@@ -87,9 +87,6 @@ const BOMSchema = new mongoose.Schema(
           ret.product_id = ret.product_id.toString();
         }
 
-        if (ret.created_by && mongoose.Types.ObjectId.isValid(ret.created_by)) {
-          ret.created_by = ret.created_by.toString();
-        }
         if (
           ret.product_id &&
           typeof ret.product_id === "object" &&
@@ -97,28 +94,23 @@ const BOMSchema = new mongoose.Schema(
         ) {
           ret.product = {
             _id: ret.product_id._id.toString(),
-            name: ret.product_id.name,
-            sku: ret.product_id.sku,
             price: ret.product_id.price
               ? parseFloat(ret.product_id.price.toString())
               : null,
-            category: ret.product_id.category,
-            unit: ret.product_id.unit,
+            ...ret.product_id,
           };
           ret.product_id = ret.product_id._id.toString();
         }
 
-        if (
-          ret.created_by &&
-          typeof ret.created_by === "object" &&
-          ret.created_by._id
-        ) {
+        if (ret.created_by && ret.created_by._id) {
           ret.creator = {
             id: ret.created_by._id.toString(),
             name: ret.created_by.name,
             email: ret.created_by.email,
           };
           ret.created_by = ret.created_by._id.toString();
+        } else {
+          ret.created_by = ret.created_by.toString();
         }
 
         // Handle items array - they'll be transformed by their own toJSON
