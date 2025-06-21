@@ -74,7 +74,10 @@ export default function DashSidebar() {
       <SidebarContent className="p-3">
         <SidebarMenu>
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(item.href);
 
             return (
               <SidebarMenuItem key={item.href}>
@@ -91,10 +94,7 @@ export default function DashSidebar() {
                   `}
                   tooltip={state === "collapsed" ? item.label : undefined}
                 >
-                  <Link
-                    href={item.href}
-                    className="flex items-center p-2"
-                  >
+                  <Link href={item.href} className="flex items-center p-2">
                     <item.icon />
                     {state === "expanded" && (
                       <span className="font-bold">{item.label}</span>
