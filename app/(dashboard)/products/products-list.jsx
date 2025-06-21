@@ -25,7 +25,7 @@ import {
 import { Skeleton } from "@/components/skeleton";
 import ProductViewModal from "./components/product-view-modal";
 import ProductEditModal from "./components/product-edit-modal";
-import SearchInput from "./components/search-input";
+import SearchInput from "@/components/search-input";
 
 import CreateProductModal from "./components/create-product-modal";
 import DeleteConfirmationDialog from "./components/delete-confirmation-dialog";
