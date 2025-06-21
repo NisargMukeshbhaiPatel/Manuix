@@ -24,10 +24,9 @@ import {
 import { Save, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { createProduct } from "@/actions/product";
-import { useQueryClient } from "@tanstack/react-query";
 
 export default function CreateProductModal({ isOpen, onClose, withBom }) {
-  const queryClient = useQueryClient();
+  const queryClient = getQueryClient();
   const [formData, setFormData] = useState({
     name: "",
     sku: "",

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import getQueryClient from "@/lib/query-client";
 import { Plus } from "lucide-react";
 import {
   Card,
@@ -21,7 +22,7 @@ export default function BOMManagementPage() {
   const [selectedBOM, setSelectedBOM] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  const queryClient = useQueryClient();
+  const queryClient = getQueryClient();
   const router = useRouter();
 
   const { data, isLoading, error } = useQuery({
