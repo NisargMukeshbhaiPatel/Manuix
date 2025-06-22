@@ -222,7 +222,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <Button type="submit" disabled={!formData.agreeToTerms || loading}>
+            <Button type="submit" className="w-full" disabled={!formData.agreeToTerms || loading}>
               {loading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
