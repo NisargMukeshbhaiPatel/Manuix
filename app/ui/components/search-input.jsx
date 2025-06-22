@@ -22,7 +22,7 @@ export default function SearchInput({
     }, debounceMs);
 
     return () => clearTimeout(timer);
-  }, [localValue, onChange, debounceMs]);
+  }, [localValue, debounceMs]);
 
   const handleClear = () => {
     setLocalValue("");
