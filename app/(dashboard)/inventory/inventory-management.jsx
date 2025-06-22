@@ -113,7 +113,7 @@ export default function InventoryManagement() {
     <div className="space-y-6">
       {/* Filters and Search */}
       <div className="flex items-center flex-col flex-wrap md:flex-row gap-4 mb-6">
-        <div className="flex-1">
+        <div className="w-full flex-1">
           <SearchInput
             value={searchTerm}
             onChange={setSearchTerm}

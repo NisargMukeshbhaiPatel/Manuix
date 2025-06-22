@@ -21,11 +21,11 @@ export default async function BOMPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Bill of Materials</h1>
+      <div className="md:flex justify-between items-center mb-6">
+        <h1 className="text-xl md:text-2xl font-bold">Bill of Materials</h1>
         <Link href="/bom/create">
           <Button>
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="w-4 h-4" />
             Create BOM
           </Button>
         </Link>

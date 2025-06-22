@@ -141,7 +141,7 @@ export default function RawMaterialsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap justify-between items-center">
-        <h1 className="text-3xl font-bold">Raw Materials Management</h1>
+        <h1 className="text-xl md:text-2xl mb-2 font-bold">Raw Materials Management</h1>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button>

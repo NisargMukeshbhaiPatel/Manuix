@@ -82,20 +82,21 @@ export default function ProductsTable() {
     );
   }
 
+	console.log(data)
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center sm:justify-between gap-4">
         <div>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
             Products
+            <p className="text-sm text-muted-foreground">
+              Total: {data?.pagination.total || "¯\\_(ツ)_/¯"}
+            </p>
           </CardTitle>
-          <p className="text-sm text-muted-foreground mt-1">
-            Total: {data?.pagination.total || "¯\\_(ツ)_/¯"}
-          </p>
         </div>
-        <div className="w-full sm:w-80">
+        <div className="w-full md:w-80">
           <SearchInput
             value={searchTerm}
             onChange={handleSearchChange}
