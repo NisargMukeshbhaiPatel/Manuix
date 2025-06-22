@@ -362,7 +362,7 @@ export const deleteSalesOrder = withDelete(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
-
+    
     // Find the sales order by ID
     const salesOrder = await SalesOrder.findById(id);
     
@@ -382,11 +382,10 @@ export const deleteSalesOrder = withDelete(async (id) => {
     }
     
     // Delete the sales order
-    await salesOrder.remove();
-
+    await SalesOrder.findByIdAndDelete(id);
+    
     return {
       success: true,
-      message: "Sales order deleted successfully",
     };
   } catch (error) {
     console.error("Error deleting sales order:", error);
