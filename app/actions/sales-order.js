@@ -2,7 +2,6 @@
 
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/db";
 import SalesOrder from "@/models/SalesOrder";
 import { createCollectionRBAC } from "@/lib/rbac";
@@ -45,12 +44,16 @@ export const getSalesOrders = withRead(async ({
 
     // Apply date range filter if provided
     if (startDate || endDate) {
-      query.order_date = {};
+      query.updatedAt = {};
       if (startDate) {
-        query.order_date.$gte = new Date(startDate);
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        query.updatedAt.$gte = start;
       }
       if (endDate) {
-        query.order_date.$lte = new Date(endDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        query.updatedAt.$lte = end;
       }
     }
 
@@ -232,9 +235,6 @@ export const createSalesOrder = withCreate(async (orderData) => {
     await salesOrder.populate('created_by', 'name email');
     await salesOrder.populate('items.product_id');
 
-    // Revalidate the sales orders cache
-    revalidatePath('/sales-orders');
-
     return {
       success: true,
       data: salesOrder.toJSON(),
@@ -298,10 +298,6 @@ export const updateSalesOrder = withUpdate(async (id, orderData) => {
       .populate('created_by', 'name email')
       .populate('items.product_id');
 
-    // Revalidate the sales order and sales orders cache
-    revalidatePath(`/sales-orders/${id}`);
-    revalidatePath('/sales-orders');
-
     return {
       success: true,
       data: updatedOrder.toJSON(),
@@ -340,25 +336,14 @@ export const updateSalesOrderPayment = withUpdate(async (id, paymentData) => {
     // Record the payment
     const result = await salesOrder.recordPayment({
       amount: paymentData.amount,
-      method: paymentData.method,
-      reference: paymentData.reference,
-      notes: paymentData.notes,
-      userId: session.user.id
+      // method: paymentData.method,
+      // reference: paymentData.reference,
+      // notes: paymentData.notes,
+      // userId: session.user.id
     });
-
-    // Refresh the sales order with populated references
-    const updatedOrder = await SalesOrder.findById(id)
-      .populate('created_by', 'name email')
-      .populate('items.product_id');
-
-    // Revalidate the sales order and sales orders cache
-    revalidatePath(`/sales-orders/${id}`);
-    revalidatePath('/sales-orders');
 
     return {
       success: true,
-      data: updatedOrder.toJSON(),
-      payment: result
     };
   } catch (error) {
     console.error("Error updating sales order payment:", error);
@@ -398,9 +383,6 @@ export const deleteSalesOrder = withDelete(async (id) => {
     
     // Delete the sales order
     await salesOrder.remove();
-
-    // Revalidate the sales orders cache
-    revalidatePath('/sales-orders');
 
     return {
       success: true,
