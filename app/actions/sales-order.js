@@ -277,6 +277,7 @@ export const updateSalesOrder = withUpdate(async (id, orderData) => {
     const oldStatus = salesOrder.status;
     
     // If this is a status change, use the dedicated method
+    const session = await getServerSession(authOptions);
     if (isStatusChange) {
       await salesOrder.updateStatus(orderData.status, session.user.id);
       
