@@ -42,12 +42,8 @@ const SalesOrderItemSchema = new mongoose.Schema(
         if (ret.product_id && typeof ret.product_id === 'object' && ret.product_id._id) {
           ret.product = {
             id: ret.product_id._id.toString(),
-            name: ret.product_id.name,
-            sku: ret.product_id.sku,
             price: ret.product_id.price ? parseFloat(ret.product_id.price.toString()) : null,
-            category: ret.product_id.category,
-            unit: ret.product_id.unit,
-            status: ret.product_id.status
+            ...ret.product_id,
           };
           ret.product_id = ret.product_id.toString();
         }
@@ -375,6 +371,30 @@ SalesOrderSchema.methods.recordPayment = async function(amount) {
   
   return this.save();
 };
+
+//method to your SalesOrderSchema
+SalesOrderSchema.methods.updateStatus = async function(newStatus, userId) {
+  try {
+    const oldStatus = this.status;
+    
+    // Update the status
+    this.status = newStatus;
+    
+    // Save the document
+    await this.save();
+    
+    return {
+      success: true,
+      oldStatus,
+      newStatus,
+      message: `Status updated from ${oldStatus} to ${newStatus}`
+    };
+    
+  } catch (error) {
+    throw new Error(`Failed to update status: ${error.message}`);
+  }
+};
+
 
 // Automatically populate the product references when accessing SalesOrder
 SalesOrderSchema.pre(/^find/, function(next) {
