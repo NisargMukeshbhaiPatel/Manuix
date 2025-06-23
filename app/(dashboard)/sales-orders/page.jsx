@@ -2,27 +2,43 @@ import getQueryClient from "@/lib/query-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getSalesOrders } from "@/actions/sales-order";
 import requirePageAccess from "@/lib/requirePageAccess";
+import SalesOrdersPage from "./sales-order-page";
 
-export default async function SalesOrdersPage() {
-  // Protect the page with appropriate permissions
+export default async function SalesOrdersServerPage() {
   await requirePageAccess({
-    salesorders: ["read"]
+    salesorders: ["read"],
   });
 
   const queryClient = getQueryClient();
-  
+
+  const defaultPage = 1;
+  const defaultFilters = {
+    status: "all",
+    customerName: "",
+    startDate: "",
+    endDate: "",
+    search: "",
+  };
+
   await queryClient.prefetchQuery({
-    queryKey: ["salesOrders"],
-    queryFn: () => getSalesOrders(),
+    queryKey: ["salesOrders", defaultPage, defaultFilters],
+    queryFn: () =>
+      getSalesOrders({
+        page: defaultPage,
+        status: defaultFilters.status === "all" ? null : defaultFilters.status,
+        customerName:
+          defaultFilters.customerName || defaultFilters.search || null,
+        startDate: defaultFilters.startDate || null,
+        endDate: defaultFilters.endDate || null,
+      }),
   });
-  console.log(await getSalesOrders());
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Sales Orders</h1>
+      <h1 className="text-xl md:text-2xl font-bold">Sales Orders</h1>
       <HydrationBoundary state={dehydrate(queryClient)}>
-        SALES ORDERS
+        <SalesOrdersPage />
       </HydrationBoundary>
     </div>
   );
-} 
+}

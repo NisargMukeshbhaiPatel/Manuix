@@ -35,10 +35,6 @@ const SalesOrderItemSchema = new mongoose.Schema(
           ret.price = parseFloat(ret.price.toString());
         }
 
-        if (ret.product_id && mongoose.Types.ObjectId.isValid(ret.product_id)) {
-          ret.product_id = ret.product_id.toString();
-        }
-
         if (ret.product_id && typeof ret.product_id === 'object' && ret.product_id._id) {
           ret.product = {
             id: ret.product_id._id.toString(),
@@ -46,7 +42,10 @@ const SalesOrderItemSchema = new mongoose.Schema(
             ...ret.product_id,
           };
           ret.product_id = ret.product_id.toString();
+        } else {
+          ret.product_id = ret.product_id.toString();
         }
+
 
         return ret;
       }
@@ -138,7 +137,8 @@ const SalesOrderSchema = new mongoose.Schema(
         }
 
         return ret;
-      }
+      },
+      virtuals: true,
     },
     toObject: { getters: true },
   }
@@ -347,7 +347,7 @@ SalesOrderSchema.methods.cancel = async function() {
 };
 
 // Method to record a payment
-SalesOrderSchema.methods.recordPayment = async function(amount) {
+SalesOrderSchema.methods.recordPayment = async function({ amount }) {
   if (this.status === 'cancelled') {
     throw new Error('Cannot record payment for cancelled order');
   }
@@ -359,7 +359,7 @@ SalesOrderSchema.methods.recordPayment = async function(amount) {
   
   // Update payment amount
   const currentPayment = this.paymentDecimal;
-  const newPayment = currentPayment + paymentAmount;
+  const newPayment = paymentAmount;
   this.payment_amount = newPayment;
   
   // Update payment status
