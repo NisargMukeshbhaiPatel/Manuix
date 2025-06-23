@@ -39,14 +39,19 @@ export const getPurchaseOrders = withRead(async ({
 
     // Apply date range filter if provided
     if (startDate || endDate) {
-      query.order_date = {};
+      query.updatedAt = {};
       if (startDate) {
-        query.order_date.$gte = new Date(startDate);
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        query.updatedAt.$gte = start;
       }
       if (endDate) {
-        query.order_date.$lte = new Date(endDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        query.updatedAt.$lte = end;
       }
     }
+
 
     // Calculate skip for pagination
     const skip = (page - 1) * limit;
