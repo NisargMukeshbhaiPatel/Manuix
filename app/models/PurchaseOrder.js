@@ -82,7 +82,7 @@ const PurchaseOrderSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['draft', 'placed', 'received'],
+      enum: ['draft', 'placed', 'received', 'cancelled'],
       default: 'draft',
       required: true,
       index: true,

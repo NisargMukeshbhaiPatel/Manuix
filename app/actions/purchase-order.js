@@ -2,7 +2,6 @@
 
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { revalidatePath } from "next/cache";
 import dbConnect from "@/lib/db";
 import PurchaseOrder from "@/models/PurchaseOrder";
 import { createCollectionRBAC } from "@/lib/rbac";
@@ -18,6 +17,7 @@ export const getPurchaseOrders = withRead(async ({
   status = null,
   supplierId = null,
   startDate = null,
+  search = null,
   endDate = null
 } = {}) => {
   try {
@@ -31,6 +31,14 @@ export const getPurchaseOrders = withRead(async ({
     if (status) {
       query.status = status;
     }
+
+    // Apply supplier name search if provided
+	if (search) {
+	  query.supplier_name = {
+		$regex: search,
+		$options: 'i' // Case-insensitive search
+	  };
+	}
 
     // Apply supplier filter if provided
     if (supplierId) {
@@ -223,17 +231,9 @@ export const createPurchaseOrder = withCreate(async (orderData) => {
 
     // Create a new purchase order
     const purchaseOrder = await PurchaseOrder.create(orderData);
-    
-    // Populate references for the response
-    await purchaseOrder.populate('created_by', 'name email');
-    await purchaseOrder.populate('items.raw_material_id');
-
-    // Revalidate the purchase orders cache
-    revalidatePath('/purchase-orders');
 
     return {
       success: true,
-      data: purchaseOrder.toJSON(),
     };
   } catch (error) {
     console.error("Error creating purchase order:", error);
@@ -251,13 +251,15 @@ export const createPurchaseOrder = withCreate(async (orderData) => {
 export const updatePurchaseOrder = withUpdate(async (id, orderData) => {
   try {
     // Connect to the database
-    await dbConnect();    // Calculate total amount if items are being updated
+    await dbConnect();
+    
+    // Calculate total amount if items are being updated
     if (orderData.items && orderData.items.length > 0) {
       orderData.total_amount = orderData.items.reduce((total, item) => {
         return total + (item.quantity * item.price);
       }, 0);
     }
-
+    
     // Find the purchase order by ID
     const purchaseOrder = await PurchaseOrder.findById(id);
     
@@ -272,16 +274,20 @@ export const updatePurchaseOrder = withUpdate(async (id, orderData) => {
     const isStatusChange = orderData.status && orderData.status !== purchaseOrder.status;
     const oldStatus = purchaseOrder.status;
     
-    // If this is a status change, use the dedicated method
+    const session = await getServerSession(authOptions);
+    
+    // If this is a status change, update status
     if (isStatusChange) {
-      await purchaseOrder.updateStatus(orderData.status, session.user.id);
+      // Update the status
+      purchaseOrder.status = orderData.status;
       
       // Update other fields separately
       delete orderData.status;
       if (Object.keys(orderData).length > 0) {
         Object.assign(purchaseOrder, orderData);
-        await purchaseOrder.save();
       }
+      
+      await purchaseOrder.save();
     } else {
       // Standard update for non-status changes
       Object.assign(purchaseOrder, orderData);
@@ -292,11 +298,7 @@ export const updatePurchaseOrder = withUpdate(async (id, orderData) => {
     const updatedOrder = await PurchaseOrder.findById(id)
       .populate('created_by', 'name email')
       .populate('items.raw_material_id');
-
-    // Revalidate the purchase order and purchase orders cache
-    revalidatePath(`/purchase-orders/${id}`);
-    revalidatePath('/purchase-orders');
-
+      
     return {
       success: true,
       data: updatedOrder.toJSON(),
@@ -321,7 +323,7 @@ export const deletePurchaseOrder = withDelete(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
-
+    
     // Find the purchase order by ID
     const purchaseOrder = await PurchaseOrder.findById(id);
     
@@ -340,15 +342,23 @@ export const deletePurchaseOrder = withDelete(async (id) => {
       };
     }
     
-    // Delete the purchase order
-    await purchaseOrder.remove();
-
-    // Revalidate the purchase orders cache
-    revalidatePath('/purchase-orders');
-
+    // Main deletion logic
+    const deletedPurchaseOrder = await PurchaseOrder.findByIdAndDelete(id);
+    
+    if (!deletedPurchaseOrder) {
+      return {
+        success: false,
+        message: "Failed to delete purchase order - document not found during deletion",
+      };
+    }
+    
     return {
       success: true,
       message: "Purchase order deleted successfully",
+      data: {
+        deletedId: deletedPurchaseOrder._id,
+        orderNumber: deletedPurchaseOrder.orderNumber || null,
+      }
     };
   } catch (error) {
     console.error("Error deleting purchase order:", error);
