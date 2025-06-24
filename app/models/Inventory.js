@@ -164,6 +164,94 @@ InventorySchema.statics.getStockLevel = async function(itemType, itemId) {
   return inventory ? parseFloat(inventory.quantity.toString()) : 0;
 };
 
+// Static method to produce products by consuming raw materials
+InventorySchema.statics.produceProducts = async function(productId, quantity, options = {}) {
+  try {
+    // Get the product instance
+    const product = await Product.findById(productId);
+    if (!product) {
+      throw new Error('Product not found');
+    }
+
+    // Check if the product can be produced
+    const productionCheck = await product.canProduce(quantity);
+    if (!productionCheck.canProduce) {
+      return {
+        success: false,
+        message: productionCheck.message,
+        shortages: productionCheck.shortages || [],
+        producibleQuantity: productionCheck.producibleQuantity || 0
+      };
+    }
+
+    // Get the BOM for this product
+    const bom = await product.getBOM();
+    if (!bom) {
+      throw new Error('No BOM found for this product');
+    }
+
+    // Start a transaction to ensure data consistency
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      // Deduct raw materials from inventory
+      for (const bomItem of bom.items) {
+        const requiredQuantity = parseFloat(bomItem.quantity.toString()) * quantity;
+        
+        // Update raw material inventory (negative change to deduct)
+        await this.updateStock(
+          'raw_material',
+          bomItem.raw_material_id._id,
+          -requiredQuantity,
+          { ...options, session }
+        );
+      }
+
+      // Add produced products to inventory
+      const producedInventory = await this.updateStock(
+        'product',
+        productId,
+        quantity,
+        { ...options, session }
+      );
+
+      // Commit the transaction
+      await session.commitTransaction();
+
+      return {
+        success: true,
+        message: `Successfully produced ${quantity} units of ${product.name}`,
+        data: {
+          productId: productId.toString(),
+          quantityProduced: quantity,
+          newInventoryLevel: parseFloat(producedInventory.quantity.toString()),
+          rawMaterialsConsumed: bom.items.map(item => ({
+            materialId: item.raw_material_id._id.toString(),
+            materialName: item.raw_material_id.name,
+            quantityConsumed: parseFloat(item.quantity.toString()) * quantity
+          }))
+        }
+      };
+
+    } catch (error) {
+      // Rollback the transaction on error
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
+
+  } catch (error) {
+    console.error('Error in produceProducts:', error);
+    return {
+      success: false,
+      message: error.message || 'Failed to produce products',
+      error: error.message
+    };
+  }
+};
+
 // Middleware to populate the referenced item when requested
 InventorySchema.pre(/^find/, function(next) {
   if (this.options && !this.options.lean) {

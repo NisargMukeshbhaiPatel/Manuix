@@ -3,6 +3,7 @@ import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getInventoryItems } from "@/actions/inventory";
 import requirePageAccess from "@/lib/requirePageAccess";
 import InventoryManagement from "./inventory-management.jsx";
+import { ProduceProductsDialog } from "./components/produce-products-dialog";
 
 export default async function InventoryPage() {
   await requirePageAccess({
@@ -27,10 +28,16 @@ export default async function InventoryPage() {
 
   return (
     <div className="space-y-4">
-      <div>
+      <div className="flex items-center justify-between">
         <h1 className="text-xl md:text-2xl font-bold tracking-tight">
           Inventory Management
         </h1>
+        <ProduceProductsDialog 
+          queryKey={[
+            "inventory",
+            { page: 1, limit: 10, itemType: "all", lowStock: false, searchTerm: "" },
+          ]}
+        />
       </div>
 
       <HydrationBoundary state={dehydrate(queryClient)}>

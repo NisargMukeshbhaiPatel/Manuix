@@ -143,6 +143,8 @@ export const updateInventory = withUpdate(async ({ itemType, itemId, quantity, o
     } 
     // If it's an adjustment (add/remove quantity), we use the updateStock static method
     else {
+      // First get the current quantity
+      const currentQuantity = await Inventory.getStockLevel(itemType, itemId);
       const change = operation === 'remove' ? -parseFloat(quantity) : parseFloat(quantity);
       const newQuantity = currentQuantity + change;
       
@@ -205,6 +207,41 @@ export const deleteInventoryItem = withDelete(async (id) => {
     return {
       success: false,
       message: "Failed to delete inventory item",
+      error: error.message,
+    };
+  }
+});
+
+/**
+ * Produce products by consuming raw materials
+ */
+export const produceProducts = withCreate(async ({ productId, quantity }) => {
+  try {
+    // Connect to the database
+    await dbConnect();
+    const session = await getServerSession(authOptions);
+
+    // Validate required fields
+    if (!productId || !quantity || quantity <= 0) {
+      return {
+        success: false,
+        message: "Product ID and a positive quantity are required",
+      };
+    }
+
+    // Call the static method from Inventory model
+    const result = await Inventory.produceProducts(
+      productId, 
+      parseFloat(quantity),
+      { userId: session.user.id }
+    );
+
+    return result;
+  } catch (error) {
+    console.error("Error producing products:", error);
+    return {
+      success: false,
+      message: "Failed to produce products",
       error: error.message,
     };
   }
