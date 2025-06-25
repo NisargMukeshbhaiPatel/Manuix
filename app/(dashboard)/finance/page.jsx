@@ -1,27 +1,25 @@
-import getQueryClient from "@/lib/query-client";
-import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
-import { getFinanceTransactions } from "@/actions/finance";
+import { DashboardSummary } from "./components/dashboard-summary";
+import { RecentTransactions } from "./components/recent-transactions";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/card";
 import requirePageAccess from "@/lib/requirePageAccess";
 
 export default async function FinancePage() {
   await requirePageAccess({
-    finances: ["read"]
+    finances: ["read"],
   });
-
-  const queryClient = getQueryClient();
-  
-  await queryClient.prefetchQuery({
-    queryKey: ["finance"],
-    queryFn: () => getFinanceTransactions(),
-  });
-  console.log(await getFinanceTransactions());
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Finance</h1>
-      <HydrationBoundary state={dehydrate(queryClient)}>
-        FINANCE
-      </HydrationBoundary>
+    <div className="space-y-6">
+      <DashboardSummary />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Transactions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RecentTransactions />
+        </CardContent>
+      </Card>
     </div>
   );
-} 
+}
