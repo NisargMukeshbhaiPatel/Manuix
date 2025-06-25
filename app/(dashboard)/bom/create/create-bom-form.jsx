@@ -215,7 +215,7 @@ export default function CreateBOMForm() {
             Back to BOM
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Create Bill of Materials</h1>
+            <h1 className="text-xl md:text-2xl font-bold">Create Bill of Materials</h1>
           </div>
         </div>
       </div>

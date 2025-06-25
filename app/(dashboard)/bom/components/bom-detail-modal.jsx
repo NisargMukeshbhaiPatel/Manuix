@@ -82,7 +82,7 @@ export function BOMDetailModal({ bom, isOpen, onClose }) {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-black uppercase tracking-wide">
-                Product Information
+                Raw Materials
               </h3>
               <div className="text-sm text-muted-foreground">
                 Total Cost:{" "}

@@ -27,7 +27,11 @@ export default function PurchaseOrderRow({ order, onEdit, onDelete }) {
     <>
       <TableRow>
         <TableCell>
-          <Button variant="ghost" className="p-0" onClick={() => setIsOpen(!isOpen)}>
+          <Button
+            variant="ghost"
+            className="p-0"
+            onClick={() => setIsOpen(!isOpen)}
+          >
             {isOpen ? (
               <ChevronDown className="h-6 w-6" />
             ) : (
@@ -47,14 +51,15 @@ export default function PurchaseOrderRow({ order, onEdit, onDelete }) {
             <Button variant="outline" size="sm" onClick={() => onEdit(order)}>
               <Edit className="h-4 w-4" />
             </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => onDelete(order._id)}
-              disabled={!canDelete}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {canDelete && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => onDelete(order._id)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </TableCell>
       </TableRow>

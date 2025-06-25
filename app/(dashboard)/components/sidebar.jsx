@@ -35,13 +35,13 @@ import {
 const GreenShield = () => <Shield className="text-green-500" />;
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-  { icon: PackageSearch, label: "Products", href: "/products" },
+  { icon: Warehouse, label: "Inventory", href: "/inventory" },
+  { icon: PackagePlus, label: "Purchase Order", href: "/purchases" },
+  { icon: ShoppingCart, label: "Sales Order", href: "/sales-orders" },
+  { icon: Banknote, label: "Finance", href: "/finance" },
+  { icon: PackageSearch, label: "Product Listing", href: "/products" },
   { icon: ListOrdered, label: "Bill of Materials", href: "/bom" },
   { icon: Boxes, label: "Raw Materials", href: "/raw-materials" },
-  { icon: Warehouse, label: "Inventory", href: "/inventory" },
-  { icon: ShoppingCart, label: "Sales Orders", href: "/sales-orders" },
-  { icon: PackagePlus, label: "Purchase Orders", href: "/purchases" },
-  { icon: Banknote, label: "Finance", href: "/finance" },
   { icon: GreenShield, label: "User Management", href: "/user-management" },
 ];
 
