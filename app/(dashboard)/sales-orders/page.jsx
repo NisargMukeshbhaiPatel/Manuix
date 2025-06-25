@@ -34,11 +34,8 @@ export default async function SalesOrdersServerPage() {
   });
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl md:text-2xl font-bold">Sales Orders</h1>
-      <HydrationBoundary state={dehydrate(queryClient)}>
-        <SalesOrdersPage />
-      </HydrationBoundary>
-    </div>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <SalesOrdersPage />
+    </HydrationBoundary>
   );
 }

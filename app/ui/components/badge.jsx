@@ -10,6 +10,7 @@ const badgeVariants = cva(
         outline: "bg-white-300 text-black",
         success: "bg-green-400 text-black",
         warning: "bg-yellow-400 text-black",
+        destructive: "bg-red-400 text-black",
       },
     },
     defaultVariants: {

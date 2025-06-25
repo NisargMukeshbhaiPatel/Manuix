@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import getQueryClient from "@/lib/query-client";
@@ -35,12 +34,34 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/alert-dialog";
-import { ChevronDown, ChevronRight, Trash2, Filter } from "lucide-react";
-import { getSalesOrders, deleteSalesOrder } from "@/actions/sales-order";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/dialog";
+import {
+  ChevronDown,
+  ChevronRight,
+  Trash2,
+  Filter,
+  Plus,
+  Edit,
+} from "lucide-react";
+import {
+  getSalesOrders,
+  deleteSalesOrder,
+  createSalesOrder,
+} from "@/actions/sales-order";
+import { getProducts } from "@/actions/product";
 import { formatDate } from "@/lib/utils";
 import SearchInput from "@/components/search-input";
 import EditSalesOrderDialog from "./components/edit-sales-order-dialog";
-import EditPaymentDialog from "./components/edit-payment-dialog";
+import CreateSalesOrderDialog from "./components/create-sales-dialog";
+import UpdatePaymentDialog from "./components/edit-payment-dialog";
 
 export default function SalesOrdersPage() {
   const [page, setPage] = useState(1);
@@ -110,20 +131,19 @@ export default function SalesOrdersPage() {
   const getStatusBadge = (status) => {
     const variants = {
       draft: "warning",
-      pending: "warning",
-      completed: "default",
+      completed: "success",
+      cancelled: "destructive",
     };
-    return <Badge variant={variants[status] || "warning"}>{status}</Badge>;
+    return <Badge variant={variants[status] || "secondary"}>{status}</Badge>;
   };
 
   const getPaymentStatusBadge = (status) => {
     const variants = {
-      paid: "default",
-      pending: "warning",
-      overdue: "warning",
+      paid: "success",
+      unpaid: "warning",
       partial: "warning",
     };
-    return <Badge variant={variants[status] || "warning"}>{status}</Badge>;
+    return <Badge variant={variants[status] || "secondary"}>{status}</Badge>;
   };
 
   if (error) {
@@ -142,6 +162,12 @@ export default function SalesOrdersPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header with Create Button */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Sales Orders</h1>
+        <CreateSalesOrderDialog />
+      </div>
+
       {/* Filters */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -170,8 +196,8 @@ export default function SalesOrdersPage() {
               <SelectContent>
                 <SelectItem value="all">All statuses</SelectItem>
                 <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -216,19 +242,19 @@ export default function SalesOrdersPage() {
               <TableHead>Amount</TableHead>
               <TableHead>Order Total</TableHead>
               <TableHead className="">Updated</TableHead>
-              <TableHead className="w-20">Actions</TableHead>
+              <TableHead className="w-32">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
+                <TableCell colSpan={8} className="text-center py-8">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : data?.data?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
+                <TableCell colSpan={8} className="text-center py-8">
                   No sales orders found
                 </TableCell>
               </TableRow>
@@ -238,15 +264,15 @@ export default function SalesOrdersPage() {
                   <TableRow>
                     <TableCell>
                       <Button
-                        variant="icon"
+                        variant="ghost"
                         size="sm"
                         className="p-0"
                         onClick={() => toggleRowExpansion(order._id)}
                       >
                         {expandedRows.has(order._id) ? (
-                          <ChevronDown className="h-6 w-6" />
+                          <ChevronDown className="h-4 w-4" />
                         ) : (
-                          <ChevronRight className="h-6 w-6" />
+                          <ChevronRight className="h-4 w-4" />
                         )}
                       </Button>
                     </TableCell>
@@ -269,34 +295,38 @@ export default function SalesOrdersPage() {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <EditSalesOrderDialog order={order} />
-                        <EditPaymentDialog order={order} />
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Delete Sales Order
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete this sales
-                                order? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => deleteMutation.mutate(order._id)}
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        <UpdatePaymentDialog order={order} />
+                        {order.status === "draft" && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Delete Sales Order
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this sales
+                                  order? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() =>
+                                    deleteMutation.mutate(order._id)
+                                  }
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -321,16 +351,21 @@ export default function SalesOrdersPage() {
                               {order.items.map((item) => (
                                 <TableRow key={item._id}>
                                   <TableCell className="font-medium">
-                                    {item.product.name}
+                                    {item.product?.name || item.product_name}
                                   </TableCell>
-                                  <TableCell>{item.product.sku}</TableCell>
+                                  <TableCell>
+                                    {item.product?.sku || item.sku}
+                                  </TableCell>
                                   <TableCell>
                                     <p className="text-sm text-muted-foreground line-clamp-4">
-                                      {item.product.description}
+                                      {item.product?.description ||
+                                        item.description}
                                     </p>
                                   </TableCell>
                                   <TableCell>{item.quantity}</TableCell>
-                                  <TableCell>{item.product.unit}</TableCell>
+                                  <TableCell>
+                                    {item.product?.unit || item.unit}
+                                  </TableCell>
                                   <TableCell>
                                     ${item.price.toFixed(2)}
                                   </TableCell>

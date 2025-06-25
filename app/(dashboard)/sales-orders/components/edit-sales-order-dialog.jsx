@@ -35,7 +35,6 @@ function EditSalesOrderDialog({ order }) {
   const updateMutation = useMutation({
     mutationFn: (data) => updateSalesOrder(data.id, data.orderData),
     onSuccess: (data) => {
-			console.log(data)
       queryClient.invalidateQueries({ queryKey: ["salesOrders"] });
       setOpen(false);
     },
@@ -89,8 +88,8 @@ function EditSalesOrderDialog({ order }) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -114,4 +113,3 @@ function EditSalesOrderDialog({ order }) {
 }
 
 export default EditSalesOrderDialog;
-
