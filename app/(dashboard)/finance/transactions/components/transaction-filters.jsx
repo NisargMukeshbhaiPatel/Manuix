@@ -3,7 +3,7 @@
 import { Input } from "@/components/input"
 import { Label } from "@/components/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/select"
-import { DatePickerWithRange } from "./date-picker-range"
+import { DatePickerWithRange } from "../../components/date-picker-range"
 import { Button } from "@/components/button"
 import { format } from "date-fns"
 import { X } from "lucide-react"
@@ -104,7 +104,7 @@ export function TransactionFiltersComponent({ filters, onFiltersChange }) {
 
       <div className="flex items-end">
         <Button variant="outline" onClick={clearFilters} className="bg-white text-black">
-          <X className="mr-2 h-4 w-4" />
+          <X className="h-4 w-4" />
           Clear Filters
         </Button>
       </div>

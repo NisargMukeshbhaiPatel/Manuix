@@ -134,15 +134,20 @@ export function TransactionTable({
                   </span>
                 </TableCell>
                 <TableCell>
-                  {transaction.source ? (
+                  {transaction.source_type ? (
                     <div className="text-sm">
-                      <div>{transaction.source.type}</div>
+                      <div>{transaction.source_type}</div>
                       <div className="text-gray-500">
-                        {transaction.source.customer_name}
+                        {transaction?.creator.name}
                       </div>
                     </div>
                   ) : (
-                    "-"
+                    <div className="text-sm">
+                      <div>Other</div>
+                      <div className="text-gray-500">
+                        {transaction?.creator.name}
+                      </div>
+                    </div>
                   )}
                 </TableCell>
                 <TableCell className="text-right">

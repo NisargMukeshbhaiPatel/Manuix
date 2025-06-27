@@ -5,9 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/button";
 import { CardTitle } from "@/components/card";
 import { useRouter } from "next/navigation";
-import { TransactionFiltersComponent } from "./transaction-filters";
-import { TransactionTable } from "./transaction-table";
-import { TransactionModal } from "./transaction-modal";
+import { TransactionFiltersComponent } from "./components/transaction-filters";
+import { TransactionTable } from "./components/transaction-table";
+import { TransactionModal } from "./components/transaction-modal";
 import { getFinanceTransactions } from "@/actions/finance";
 import { Plus, ArrowLeft } from "lucide-react";
 
@@ -29,6 +29,7 @@ export function TransactionsPage() {
     queryKey: ["transactions", filters],
     queryFn: () => getFinanceTransactions(filters),
   });
+  console.log("filters", transactions);
 
   const handleEdit = (transaction) => {
     setEditingTransaction(transaction);
@@ -57,7 +58,7 @@ export function TransactionsPage() {
           </div>
         </div>
         <Button onClick={() => setIsModalOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="h-4 w-4" />
           Add Transaction
         </Button>
       </div>

@@ -1,5 +1,5 @@
 import requirePageAccess from "@/lib/requirePageAccess";
-import { TransactionsPage } from "../components/transactions-page"
+import { TransactionsPage } from "./transactions-page"
 
 export default async function Transactions() {
   await requirePageAccess({

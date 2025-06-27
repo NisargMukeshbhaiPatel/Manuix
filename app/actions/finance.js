@@ -30,7 +30,7 @@ export const getFinanceTransactions = withRead(async ({
     
     // Apply transaction type filter if provided
     if (type) {
-      query.transaction_type = type;
+      query.type = type;
     }
 
     // Apply date range filter if provided
@@ -46,10 +46,10 @@ export const getFinanceTransactions = withRead(async ({
 
     // Apply reference filters if provided
     if (refType) {
-      query.reference_type = refType;
+      query.source_type = refType;
     }
     if (refId) {
-      query.reference_id = refId;
+      query.reference_number = { $regex: refId, $options: "i" }; // Case-insensitive search
     }
 
     // Calculate skip for pagination

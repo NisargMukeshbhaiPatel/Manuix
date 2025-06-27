@@ -101,7 +101,6 @@ export function TransactionModal({ isOpen, onClose, transaction }) {
     const data = {
       ...formData,
       amount: Number.parseFloat(formData.amount),
-      source_id: formData.source_type === "Other" ? null : formData.source_id || null,
       date: new Date(formData.date).toISOString(),
     }
 
@@ -144,26 +143,11 @@ export function TransactionModal({ isOpen, onClose, transaction }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="SalesOrder">Sales Order</SelectItem>
-                  <SelectItem value="PurchaseOrder">Purchase Order</SelectItem>
                   <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
-
-          {formData.source_type !== "Other" && (
-            <div>
-              <Label htmlFor="source_id">Source ID</Label>
-              <Input
-                id="source_id"
-                value={formData.source_id}
-                onChange={(e) => setFormData({ ...formData, source_id: e.target.value })}
-                placeholder="Enter source ID"
-                required
-              />
-            </div>
-          )}
 
           <div>
             <Label htmlFor="amount">Amount</Label>
