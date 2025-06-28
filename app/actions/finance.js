@@ -35,12 +35,12 @@ export const getFinanceTransactions = withRead(async ({
 
     // Apply date range filter if provided
     if (startDate || endDate) {
-      query.transaction_date = {};
+      query.date = {};
       if (startDate) {
-        query.transaction_date.$gte = new Date(startDate);
+        query.date.$gte = new Date(startDate);
       }
       if (endDate) {
-        query.transaction_date.$lte = new Date(endDate);
+        query.date.$lte = new Date(endDate);
       }
     }
 
@@ -63,7 +63,7 @@ export const getFinanceTransactions = withRead(async ({
       .populate('created_by', 'name email')
       .skip(skip)
       .limit(limit)
-      .sort({ transaction_date: -1, createdAt: -1 }); // Sort by transaction date (newest first)
+      .sort({ date: -1, createdAt: -1 }); // Sort by transaction date (newest first)
 
     return {
       success: true,
@@ -103,15 +103,15 @@ export const getFinanceSummary = withRead(async ({ startDate, endDate } = {}) =>
     }
 
     // Create the query with date filter if provided
-    const query = dateFilter ? { transaction_date: dateFilter } : {};
+    const query = dateFilter ? { date: dateFilter } : {};
 
     // Use MongoDB aggregation to calculate summary
     const summary = await Finance.aggregate([
       { $match: query },
       {
         $group: {
-          _id: "$transaction_type",
-          total: { $sum: "$amount" }
+          _id: "$type",
+          total: { $sum: { $toDouble: "$amount" } }
         }
       }
     ]);
@@ -121,9 +121,9 @@ export const getFinanceSummary = withRead(async ({ startDate, endDate } = {}) =>
     let expenses = 0;
 
     summary.forEach(item => {
-      if (item._id === 'income' || item._id === 'sales') {
+      if (item._id === 'income') {
         income += item.total;
-      } else if (item._id === 'expense' || item._id === 'purchase') {
+      } else if (item._id === 'expense') {
         expenses += item.total;
       }
     });
