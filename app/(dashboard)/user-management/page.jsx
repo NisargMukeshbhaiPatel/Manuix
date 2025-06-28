@@ -1,10 +1,11 @@
 import { getAllUsers } from "@/actions/user";
 import AdminUserManagement from "./admin-user-management";
 import requirePageAccess from "@/lib/requirePageAccess";
+import { createServerPermissionsFromCollection } from "@/lib/rbac";
 
 export default async function UserManagementPage() {
   await requirePageAccess({
-    users: ["create", "read", "update", "delete"],
+    users: ["read"],
   });
 
   let allUsers = [];
@@ -12,14 +13,14 @@ export default async function UserManagementPage() {
     const res = await getAllUsers();
     if (!res.success) throw new Error(res.error);
     allUsers = res.users;
-    console.log(allUsers);
   } catch (error) {
     return error.message;
   }
 
+  const perms = await createServerPermissionsFromCollection("users");
   return (
     <>
-      <AdminUserManagement allUsers={allUsers} />
+      <AdminUserManagement perms={perms} allUsers={allUsers} />
     </>
   );
 }

@@ -11,7 +11,7 @@ import { TransactionModal } from "./components/transaction-modal";
 import { getFinanceTransactions } from "@/actions/finance";
 import { Plus, ArrowLeft } from "lucide-react";
 
-export function TransactionsPage() {
+export function TransactionsPage({ perms }) {
   const [filters, setFilters] = useState({
     page: 1,
     limit: 10,
@@ -57,10 +57,12 @@ export function TransactionsPage() {
             <h1 className="text-xl md:text-2xl font-bold">Transactions</h1>
           </div>
         </div>
-        <Button onClick={() => setIsModalOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Add Transaction
-        </Button>
+        {perms?.canWrite && (
+          <Button onClick={() => setIsModalOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Add Transaction
+          </Button>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -84,16 +86,19 @@ export function TransactionsPage() {
           transactions={transactions?.data || []}
           pagination={transactions?.pagination}
           isLoading={isLoading}
-          onEdit={handleEdit}
+          onEdit={perms?.canEdit ? handleEdit : undefined}
           onPageChange={(page) => setFilters({ ...filters, page })}
+          perms={perms}
         />
       </div>
 
-      <TransactionModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        transaction={editingTransaction}
-      />
+      {perms?.canWrite && (
+        <TransactionModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          transaction={editingTransaction}
+        />
+      )}
     </div>
   );
 }

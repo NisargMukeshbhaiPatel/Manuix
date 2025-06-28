@@ -57,7 +57,7 @@ import {
   deletePurchaseOrder,
 } from "@/actions/purchase-order";
 
-export default function PurchaseOrdersPage() {
+export default function PurchaseOrdersPage({ perms }) {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
     status: "all",
@@ -215,67 +215,103 @@ export default function PurchaseOrdersPage() {
             className="w-[150px]"
           />
         </div>
+        <div className="flex items-end">
+          <Button variant="outline" onClick={clearFilters}>
+            Clear
+          </Button>
+        </div>
       </div>
-      <Button variant="outline" onClick={clearFilters}>
-        Clear Filters
-      </Button>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead></TableHead>
-              <TableHead>Supplier Name</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Updated</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
-                  Loading...
-                </TableCell>
-              </TableRow>
-            ) : error ? (
-              <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="text-center py-8 text-red-500"
-                >
-                  Error loading purchase orders
-                </TableCell>
-              </TableRow>
-            ) : data?.data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
+      {isLoading ? (
+        <div className="text-center py-8">Loading purchase orders...</div>
+      ) : error ? (
+        <div className="text-center py-8 text-red-600">
+          Error loading purchase orders: {error.message}
+        </div>
+      ) : (
+        <>
+          {data?.data?.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center py-8 text-muted-foreground">
                   No purchase orders found
-                </TableCell>
-              </TableRow>
-            ) : (
-              data?.data.map((order) => (
-                <PurchaseOrderRow
-                  key={order._id}
-                  order={order}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead></TableHead>
+                    <TableHead>Supplier</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Total</TableHead>
+                    {(perms?.canEdit || perms?.canDelete) && (
+                      <TableHead className="text-right">Actions</TableHead>
+                    )}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data?.data?.map((order) => (
+                    <PurchaseOrderRow
+                      key={order._id}
+                      order={order}
+                      onEdit={perms?.canEdit ? handleEdit : undefined}
+                      onDelete={perms?.canDelete ? handleDelete : undefined}
+                    />
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
 
-      <Dialog open={!!editingOrder} onOpenChange={() => setEditingOrder(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Purchase Order</DialogTitle>
-            <DialogDescription>
-              Update the purchase order details
-            </DialogDescription>
-          </DialogHeader>
-          {editingOrder && (
+          {/* Pagination */}
+          {data?.pagination && data.pagination.pages > 1 && (
+            <div className="flex justify-between items-center mt-6">
+              <div className="text-sm text-muted-foreground">
+                Page {page} of {data.pagination.pages} ({data.pagination.total}{" "}
+                total)
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                  disabled={page === 1}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setPage((prev) => Math.min(data.pagination.pages, prev + 1))
+                  }
+                  disabled={page === data.pagination.pages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Edit Dialog */}
+      {perms?.canEdit && editingOrder && (
+        <Dialog
+          open={!!editingOrder}
+          onOpenChange={() => setEditingOrder(null)}
+        >
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Purchase Order</DialogTitle>
+              <DialogDescription>
+                Update the purchase order details below.
+              </DialogDescription>
+            </DialogHeader>
             <div className="space-y-4">
               <div>
                 <Label htmlFor="supplier">Supplier Name</Label>
@@ -283,10 +319,10 @@ export default function PurchaseOrdersPage() {
                   id="supplier"
                   value={editingOrder.supplier_name}
                   onChange={(e) =>
-                    setEditingOrder({
-                      ...editingOrder,
+                    setEditingOrder((prev) => ({
+                      ...prev,
                       supplier_name: e.target.value,
-                    })
+                    }))
                   }
                 />
               </div>
@@ -295,10 +331,7 @@ export default function PurchaseOrdersPage() {
                 <Select
                   value={editingOrder.status}
                   onValueChange={(value) =>
-                    setEditingOrder({
-                      ...editingOrder,
-                      status: value,
-                    })
+                    setEditingOrder((prev) => ({ ...prev, status: value }))
                   }
                 >
                   <SelectTrigger>
@@ -313,45 +346,47 @@ export default function PurchaseOrdersPage() {
                 </Select>
               </div>
             </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingOrder(null)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSaveEdit}
-              disabled={updateMutation.isPending}
-            >
-              {updateMutation.isPending ? "Saving..." : "Save Changes"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingOrder(null)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveEdit}
+                disabled={updateMutation.isPending}
+              >
+                {updateMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
-      <AlertDialog
-        open={!!deletingOrderId}
-        onOpenChange={() => setDeletingOrderId(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              purchase order.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Delete Confirmation Dialog */}
+      {perms?.canDelete && (
+        <AlertDialog
+          open={!!deletingOrderId}
+          onOpenChange={() => setDeletingOrderId(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Purchase Order</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this purchase order? This action
+                cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }

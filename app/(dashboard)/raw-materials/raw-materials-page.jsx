@@ -43,7 +43,7 @@ import { formatPrice, formatDate } from "@/lib/utils";
 import SearchInput from "@/components/search-input";
 import MaterialForm from "./components/material-form";
 
-export default function RawMaterialsPage() {
+export default function RawMaterialsPage({ perms }) {
   const [searchName, setSearchName] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -142,24 +142,26 @@ export default function RawMaterialsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap justify-between items-center">
         <h1 className="text-xl md:text-2xl mb-2 font-bold">Raw Materials Management</h1>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Material
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Raw Material</DialogTitle>
-            </DialogHeader>
-            <MaterialForm
-              onSubmit={handleCreate}
-              onCancel={() => setIsAddDialogOpen(false)}
-              isLoading={createMutation.isPending}
-            />
-          </DialogContent>
-        </Dialog>
+        {perms?.canWrite && (
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Material
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Raw Material</DialogTitle>
+              </DialogHeader>
+              <MaterialForm
+                onSubmit={handleCreate}
+                onCancel={() => setIsAddDialogOpen(false)}
+                isLoading={createMutation.isPending}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <div className="space-y-6">
@@ -192,7 +194,9 @@ export default function RawMaterialsPage() {
                     <TableHead>Price</TableHead>
                     <TableHead>Created At</TableHead>
                     <TableHead>Updated At</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    {(perms?.canEdit || perms?.canDelete) && (
+                      <TableHead className="text-right">Actions</TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -215,45 +219,51 @@ export default function RawMaterialsPage() {
                         <TableCell>{formatPrice(material.price)}</TableCell>
                         <TableCell>{formatDate(material.createdAt)}</TableCell>
                         <TableCell>{formatDate(material.updatedAt)}</TableCell>
-                        <TableCell className="text-right w-32">
-                          <div className="flex justify-end space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setEditingMaterial(material)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="sm">
-                                  <Trash2 className="w-4 h-4" />
+                        {(perms?.canEdit || perms?.canDelete) && (
+                          <TableCell className="text-right w-32">
+                            <div className="flex justify-end space-x-2">
+                              {perms?.canEdit && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setEditingMaterial(material)}
+                                >
+                                  <Edit className="w-4 h-4" />
                                 </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Delete Material
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete "
-                                    {material.name}"? This action cannot be
-                                    undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDelete(material._id)}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
+                              )}
+                              {perms?.canDelete && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="sm">
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        Delete Material
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete "
+                                        {material.name}"? This action cannot be
+                                        undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleDelete(material._id)}
+                                        className="bg-red-600 hover:bg-red-700"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))
                   )}
@@ -300,24 +310,26 @@ export default function RawMaterialsPage() {
       </div>
 
       {/* Edit Dialog */}
-      <Dialog
-        open={!!editingMaterial}
-        onOpenChange={() => setEditingMaterial(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Raw Material</DialogTitle>
-          </DialogHeader>
-          {editingMaterial && (
-            <MaterialForm
-              material={editingMaterial}
-              onSubmit={handleUpdate}
-              onCancel={() => setEditingMaterial(null)}
-              isLoading={updateMutation.isPending}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {perms?.canEdit && (
+        <Dialog
+          open={!!editingMaterial}
+          onOpenChange={() => setEditingMaterial(null)}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Raw Material</DialogTitle>
+            </DialogHeader>
+            {editingMaterial && (
+              <MaterialForm
+                material={editingMaterial}
+                onSubmit={handleUpdate}
+                onCancel={() => setEditingMaterial(null)}
+                isLoading={updateMutation.isPending}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

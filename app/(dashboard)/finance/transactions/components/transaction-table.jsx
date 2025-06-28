@@ -33,6 +33,7 @@ export function TransactionTable({
   isLoading,
   onEdit,
   onPageChange,
+  perms,
 }) {
   const [deleteId, setDeleteId] = useState(null);
   const queryClient = useQueryClient();
@@ -96,7 +97,9 @@ export function TransactionTable({
               <TableHead>Category</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Source</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              {(perms.canDelete || perms.canEdit) && (
+                <TableHead className="text-right">Actions</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -150,25 +153,32 @@ export function TransactionTable({
                     </div>
                   )}
                 </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onEdit(transaction)}
-                      className="bg-white text-black"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setDeleteId(transaction.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+
+                {(perms.canDelete || perms.canEdit) && (
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-2">
+                      {perms?.canEdit && onEdit && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onEdit(transaction)}
+                          className="bg-white text-black"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {perms?.canDelete && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setDeleteId(transaction.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>

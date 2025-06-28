@@ -3,6 +3,7 @@ import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getProducts } from "@/actions/product";
 import ProductsList from "./products-list.jsx";
 import requirePageAccess from "@/lib/requirePageAccess";
+import { createServerPermissionsFromCollection } from "@/lib/rbac";
 
 export default async function ProductsPage() {
   await requirePageAccess({
@@ -19,9 +20,11 @@ export default async function ProductsPage() {
     return error.message;
   }
 
+  const perms = await createServerPermissionsFromCollection("products");
+  const { canRead } = await createServerPermissionsFromCollection("boms");
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <ProductsList />
+      <ProductsList perms={perms} fetchBom={canRead} />
     </HydrationBoundary>
   );
 }

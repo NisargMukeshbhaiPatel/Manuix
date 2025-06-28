@@ -24,7 +24,12 @@ import { useQuery } from "@tanstack/react-query";
 import { getBOMs } from "@/actions/bom";
 import { useRouter } from "next/navigation";
 
-export default function ProductViewModal({ product, isOpen, onClose }) {
+export default function ProductViewModal({
+  product,
+  fetchBom,
+  isOpen,
+  onClose,
+}) {
   const router = useRouter();
 
   const {
@@ -34,7 +39,7 @@ export default function ProductViewModal({ product, isOpen, onClose }) {
   } = useQuery({
     queryKey: ["boms", product?._id],
     queryFn: () => getBOMs({ productId: product._id, limit: 100 }),
-    enabled: !!product?._id && isOpen,
+    enabled: fetchBom && !!product?._id && isOpen,
   });
 
   if (!product) return null;
@@ -132,123 +137,127 @@ export default function ProductViewModal({ product, isOpen, onClose }) {
           <Separator />
 
           {/* BOM Section */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold flex items-center gap-2">
-                <List className="h-4 w-4" />
-                Bill of Materials (BOM)
-              </h3>
-              {bomData?.boms && bomData.boms.length > 0 && (
-                <Button
-                  onClick={handleEditBOM}
-                  size="sm"
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  <Edit className="h-4 w-4" />
-                  Edit BOM
-                </Button>
-              )}
-            </div>
-
-            {bomLoading && (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <span className="ml-2">Loading BOM details...</span>
-              </div>
-            )}
-
-            {bomError && (
-              <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <AlertCircle className="h-4 w-4 text-red-600" />
-                <span className="text-sm text-red-600">
-                  Failed to load BOM details
-                </span>
-              </div>
-            )}
-
-            {bomData && bomData.success && (
-              <div className="space-y-3">
-                {bomData.boms && bomData.boms.length > 0 ? (
-                  <div className="grid gap-4">
-                    {bomData.boms.map((bom) => (
-                      <div key={bom._id}>
-                        <div className="space-y-2">
-                          {/* Raw Materials/Components List */}
-                          {bom.items && bom.items.length > 0 && (
-                            <div className="space-y-2">
-                              <h5 className="text-sm font-medium text-gray-700 flex items-center gap-1">
-                                <Package className="h-3 w-3" />
-                                Raw Materials
-                              </h5>
-                              <div className="space-y-2">
-                                {bom.items.map((item) => (
-                                  <div
-                                    key={item._id}
-                                    className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-md"
-                                  >
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2">
-                                        <span className="font-medium text-sm">
-                                          {item.raw_material?.name ||
-                                            "Unknown Material"}
-                                        </span>
-                                        <Badge
-                                          variant="secondary"
-                                          className="text-xs"
-                                        >
-                                          {item.raw_material?.unit || "unit"}
-                                        </Badge>
-                                      </div>
-                                    </div>
-                                    <div className="text-right">
-                                      <div className="flex items-center gap-2">
-                                        <div className="text-sm">
-                                          <Hash className="h-3 w-3 inline mr-1" />
-                                          {item.quantity}
-                                        </div>
-                                        <div className="font-semibold text-sm">
-                                          {formatPrice(
-                                            (item.raw_material?.price || 0) *
-                                              item.quantity,
-                                          )}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                              <div className="font-semibold text-primary text-right">
-                                Total:{" "}
-                                {formatPrice(calculateBOMCost(bom.items))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center text-gray-500 py-8">
-                    <List className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">
-                      No BOM records found for this product
-                    </p>
+          {fetchBom && (
+            <>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <List className="h-4 w-4" />
+                    Bill of Materials (BOM)
+                  </h3>
+                  {bomData?.boms && bomData.boms.length > 0 && (
                     <Button
-                      onClick={() => router.push("/bom/create")}
+                      onClick={handleEditBOM}
                       size="sm"
                       variant="outline"
-                      className="mt-3"
+                      className="flex items-center gap-2"
                     >
-                      Create BOM
+                      <Edit className="h-4 w-4" />
+                      Edit BOM
                     </Button>
+                  )}
+                </div>
+
+                {bomLoading && (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                    <span className="ml-2">Loading BOM details...</span>
+                  </div>
+                )}
+
+                {bomError && (
+                  <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    <span className="text-sm text-red-600">
+                      Failed to load BOM details
+                    </span>
+                  </div>
+                )}
+
+                {bomData && bomData.success && (
+                  <div className="space-y-3">
+                    {bomData.boms && bomData.boms.length > 0 ? (
+                      <div className="grid gap-4">
+                        {bomData.boms.map((bom) => (
+                          <div key={bom._id}>
+                            <div className="space-y-2">
+                              {/* Raw Materials/Components List */}
+                              {bom.items && bom.items.length > 0 && (
+                                <div className="space-y-2">
+                                  <h5 className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                                    <Package className="h-3 w-3" />
+                                    Raw Materials
+                                  </h5>
+                                  <div className="space-y-2">
+                                    {bom.items.map((item) => (
+                                      <div
+                                        key={item._id}
+                                        className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-md"
+                                      >
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-2">
+                                            <span className="font-medium text-sm">
+                                              {item.raw_material?.name ||
+                                                "Unknown Material"}
+                                            </span>
+                                            <Badge
+                                              variant="secondary"
+                                              className="text-xs"
+                                            >
+                                              {item.raw_material?.unit ||
+                                                "unit"}
+                                            </Badge>
+                                          </div>
+                                        </div>
+                                        <div className="text-right">
+                                          <div className="flex items-center gap-2">
+                                            <div className="text-sm">
+                                              <Hash className="h-3 w-3 inline mr-1" />
+                                              {item.quantity}
+                                            </div>
+                                            <div className="font-semibold text-sm">
+                                              {formatPrice(
+                                                (item.raw_material?.price ||
+                                                  0) * item.quantity,
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <div className="font-semibold text-primary text-right">
+                                    Total:{" "}
+                                    {formatPrice(calculateBOMCost(bom.items))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center text-gray-500 py-8">
+                        <List className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">
+                          No BOM records found for this product
+                        </p>
+                        <Button
+                          onClick={() => router.push("/bom/create")}
+                          size="sm"
+                          variant="outline"
+                          className="mt-3"
+                        >
+                          Create BOM
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
-          </div>
-
-          <Separator />
+              <Separator />
+            </>
+          )}
 
           {/* Timestamps */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">

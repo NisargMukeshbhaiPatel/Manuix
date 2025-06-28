@@ -9,7 +9,7 @@ import { formatPrice as formatCurrency } from "@/lib/utils";
 import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { addDays, format } from "date-fns";
 
-export function DashboardSummary() {
+export function DashboardSummary({ perms }) {
   const [dateRange, setDateRange] = useState({
     from: addDays(new Date(), -30),
     to: new Date(),

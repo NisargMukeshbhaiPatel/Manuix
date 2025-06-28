@@ -8,7 +8,7 @@ import { getFinanceTransactions } from "@/actions/finance";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
 
-export function RecentTransactions() {
+export function RecentTransactions({ perms }) {
   const { data: transactions, isLoading } = useQuery({
     queryKey: [
       "transactions",
@@ -57,9 +57,11 @@ export function RecentTransactions() {
     return (
       <div className="text-center py-8 text-gray-500">
         <p>No transactions found</p>
-        <Link href="/finance/transactions">
-          <Button className="mt-4">Add First Transaction</Button>
-        </Link>
+        {perms?.canWrite && (
+          <Link href="/finance/transactions">
+            <Button className="mt-4">Add First Transaction</Button>
+          </Link>
+        )}
       </div>
     );
   }

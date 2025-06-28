@@ -17,7 +17,7 @@ import { BOMPagination } from "./components/bom-pagination";
 import { getBOMs } from "@/actions/bom";
 import { useRouter } from "next/navigation";
 
-export default function BOMManagementPage() {
+export default function BOMManagementPage({ perms }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedBOM, setSelectedBOM] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -101,10 +101,12 @@ export default function BOMManagementPage() {
       {data?.boms.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">No BOMs found</p>
-          <Button onClick={handleCreate}>
-            <Plus className="w-4 h-4 mr-2" />
-            Create your first BOM
-          </Button>
+          {perms.canWrite && (
+            <Button onClick={handleCreate}>
+              <Plus className="w-4 h-4 mr-2" />
+              Create your first BOM
+            </Button>
+          )}
         </div>
       ) : (
         <>
@@ -115,6 +117,7 @@ export default function BOMManagementPage() {
                 bom={bom}
                 onView={handleView}
                 onSuccess={handleSuccess}
+                perms={perms}
               />
             ))}
           </div>
@@ -131,6 +134,7 @@ export default function BOMManagementPage() {
         bom={selectedBOM}
         isOpen={isDetailModalOpen}
         onClose={handleModalClose}
+        perms={perms}
       />
     </div>
   );

@@ -19,9 +19,17 @@ const getStatusColor = (status) => {
   };
   return <Badge variant={variants[status] || "default"}>{status}</Badge>;
 };
+
 export default function PurchaseOrderRow({ order, onEdit, onDelete }) {
   const [isOpen, setIsOpen] = useState(false);
   const canDelete = order.status === "draft" || order.status === "cancelled";
+  const calculateTotal = () => {
+    if (!order.items || order.items.length === 0) return 0;
+    return order.items.reduce(
+      (total, item) => total + item.quantity * item.price,
+      0,
+    );
+  };
 
   return (
     <>
@@ -46,26 +54,37 @@ export default function PurchaseOrderRow({ order, onEdit, onDelete }) {
           </Badge>
         </TableCell>
         <TableCell>{formatDate(order.updatedAt)}</TableCell>
-        <TableCell>
-          <div className="flex gap-1">
-            <Button variant="outline" size="sm" onClick={() => onEdit(order)}>
-              <Edit className="h-4 w-4" />
-            </Button>
-            {canDelete && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => onDelete(order._id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+        <TableCell className="font-medium">
+          ${calculateTotal().toFixed(2)}
         </TableCell>
+        {(onEdit || onDelete) && (
+          <TableCell className="text-right">
+            <div className="flex gap-1 justify-end">
+              {onEdit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEdit(order)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              )}
+              {onDelete && canDelete && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => onDelete(order._id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </TableCell>
+        )}
       </TableRow>
       {isOpen && (
         <TableRow>
-          <TableCell colSpan={5} className="p-0">
+          <TableCell colSpan={onEdit || onDelete ? 6 : 5} className="p-0">
             <div className="px-4 py-4 bg-gray-50">
               <h4 className="font-semibold mb-3">Items:</h4>
               <div className="rounded-md border bg-white">
@@ -79,7 +98,7 @@ export default function PurchaseOrderRow({ order, onEdit, onDelete }) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {order.items.map((item) => (
+                    {order.items?.map((item) => (
                       <TableRow key={item._id}>
                         <TableCell className="font-medium">
                           {item.raw_material.name}

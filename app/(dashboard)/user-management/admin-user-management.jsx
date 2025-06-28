@@ -21,6 +21,7 @@ import {
   Pencil,
   Trash,
   Shield,
+  X,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/tabs";
 import { Input } from "@/components/input";
@@ -108,7 +109,8 @@ const formatModuleName = (module) => {
   };
   return moduleNames[module] || module;
 };
-export default function AdminUserManagement({ allUsers }) {
+
+export default function AdminUserManagement({ perms, allUsers }) {
   const router = useRouter();
   const [users, setUsers] = useState(allUsers);
   const [email, setEmail] = useState("");
@@ -124,8 +126,21 @@ export default function AdminUserManagement({ allUsers }) {
     setUsers(allUsers);
   }, [allUsers]);
 
+  const canInviteUsers = perms.canWrite;
+  const canEditUsers = perms.canEdit;
+  const canDeleteUsers = perms.canDelete;
+
   const handleInviteUser = async (e) => {
     e.preventDefault();
+    if (!canInviteUsers) {
+      toast({
+        title: "Access denied",
+        description: "You don't have permission to invite users",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!email || !selectedRole) {
       toast({
         title: "Please fill in all fields",
@@ -190,6 +205,15 @@ export default function AdminUserManagement({ allUsers }) {
   };
 
   const handleDeleteUser = async (userId) => {
+    if (!canDeleteUsers) {
+      toast({
+        title: "Access denied",
+        description: "You don't have permission to delete users",
+        variant: "destructive",
+      });
+      return;
+    }
+
     startTransition(async () => {
       const formData = new FormData();
       formData.append("userId", userId);
@@ -247,107 +271,111 @@ export default function AdminUserManagement({ allUsers }) {
         </div>
 
         <TabsContent value="users" className="space-y-12">
-          {/* Invite User Form */}
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl font-semibold flex items-center gap-2">
-                <UserPlus className="h-5 w-5" />
-                Invite New User
-              </h2>
-            </div>
-
-            <form onSubmit={handleInviteUser} className="space-y-6 max-w-2xl">
+          {/* Invite User Form - Only show if user can invite */}
+          {canInviteUsers && (
+            <div className="space-y-4">
               <div>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter user email to invite"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <UserPlus className="h-5 w-5" />
+                  Invite New User
+                </h2>
               </div>
 
-              <div>
-                <Label className="text-sm font-medium">Select Role</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {ROLES.map((role) => {
-                    const rolePermissions = getRolePermissions(role);
-
-                    if (rolePermissions.length === 0) return null;
-
-                    return (
-                      <HoverCard key={role} openDelay={1000} closeDelay={0}>
-                        <HoverCardTrigger asChild>
-                          <Badge
-                            variant={
-                              selectedRole === role ? "default" : "outline"
-                            }
-                            className={`cursor-pointer px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 ${
-                              selectedRole === role
-                                ? "bg-orange-400 hover:bg-orange-500 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] translate-y-[-1px]"
-                                : ""
-                            }`}
-                            onClick={() => setSelectedRole(role)}
-                          >
-                            {role}
-                          </Badge>
-                        </HoverCardTrigger>
-                        <HoverCardContent
-                          className="w-[600px] p-0 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white"
-                          side="bottom"
-                          sideOffset={10}
-                        >
-                          <div className="p-6">
-                            <div className="mb-4">
-                              <h3 className="text-lg font-bold text-black uppercase tracking-wide border-b-4 border-black pb-2">
-                                {role} Role
-                              </h3>
-                            </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
-                              {rolePermissions.map(([module, actions]) => (
-                                <div key={module} className="space-y-2">
-                                  <div className="text-xs font-bold text-black uppercase tracking-wide">
-                                    {formatModuleName(module)}
-                                  </div>
-                                  <div className="flex flex-wrap gap-1">
-                                    {actions.map((action) => (
-                                      <div
-                                        key={action}
-                                        className="inline-flex items-center gap-1 px-2 py-1 bg-orange-300 border-2 border-black text-black text-xs font-bold uppercase tracking-wide shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                                      >
-                                        {getPermissionIcon(action)}
-                                        {action}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </HoverCardContent>
-                      </HoverCard>
-                    );
-                  })}
+              <form onSubmit={handleInviteUser} className="space-y-6 max-w-2xl">
+                <div>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter user email to invite"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
                 </div>
-              </div>
 
-              <Button
-                type="submit"
-                disabled={isPending || !selectedRole}
-                className="w-full md:w-auto"
-              >
-                {isPending ? "Inviting..." : "Send Invite"}
-              </Button>
-            </form>
-          </div>
+                <div>
+                  <Label className="text-sm font-medium">Select Role</Label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {ROLES.map((role) => {
+                      const rolePermissions = getRolePermissions(role);
+
+                      if (rolePermissions.length === 0) return null;
+
+                      return (
+                        <HoverCard key={role} openDelay={1000} closeDelay={0}>
+                          <HoverCardTrigger asChild>
+                            <Badge
+                              variant={
+                                selectedRole === role ? "default" : "outline"
+                              }
+                              className={`cursor-pointer px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 ${
+                                selectedRole === role
+                                  ? "bg-orange-400 hover:bg-orange-500 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] translate-y-[-1px]"
+                                  : ""
+                              }`}
+                              onClick={() => setSelectedRole(role)}
+                            >
+                              {role}
+                            </Badge>
+                          </HoverCardTrigger>
+                          <HoverCardContent
+                            className="w-[600px] p-0 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white"
+                            side="bottom"
+                            sideOffset={10}
+                          >
+                            <div className="p-6">
+                              <div className="mb-4">
+                                <h3 className="text-lg font-bold text-black uppercase tracking-wide border-b-4 border-black pb-2">
+                                  {role} Role
+                                </h3>
+                              </div>
+                              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                                {rolePermissions.map(([module, actions]) => (
+                                  <div key={module} className="space-y-2">
+                                    <div className="text-xs font-bold text-black uppercase tracking-wide">
+                                      {formatModuleName(module)}
+                                    </div>
+                                    <div className="flex flex-wrap gap-1">
+                                      {actions.map((action) => (
+                                        <div
+                                          key={action}
+                                          className="inline-flex items-center gap-1 px-2 py-1 bg-orange-300 border-2 border-black text-black text-xs font-bold uppercase tracking-wide shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                                        >
+                                          {getPermissionIcon(action)}
+                                          {action}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </HoverCardContent>
+                        </HoverCard>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isPending || !selectedRole}
+                  className="w-full md:w-auto"
+                >
+                  {isPending ? "Inviting..." : "Send Invite"}
+                </Button>
+              </form>
+            </div>
+          )}
 
           {/* Members Table */}
           <div className="space-y-4">
             <div>
               <h2 className="text-xl font-semibold">Members</h2>
               <p className="text-sm text-muted-foreground">
-                Manage existing users & their roles
+                {canEditUsers || canDeleteUsers
+                  ? "Manage existing users & their roles"
+                  : "View existing users & their roles"}
               </p>
             </div>
 
@@ -358,7 +386,9 @@ export default function AdminUserManagement({ allUsers }) {
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
-                    <TableHead className="w-[70px]">Actions</TableHead>
+                    {(canEditUsers || canDeleteUsers) && (
+                      <TableHead className="w-[70px]">Actions</TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -369,26 +399,32 @@ export default function AdminUserManagement({ allUsers }) {
                       <TableCell>
                         <Badge className="cursor-pointer">{user.role}</Badge>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              setEditingUser(user)
-                            }
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => setDeleteUserId(user._id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                      {(canEditUsers || canDeleteUsers) && (
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            {canEditUsers && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditingUser(user)}
+                                title="Edit user role"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {canDeleteUsers && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => setDeleteUserId(user._id)}
+                                title="Delete user"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
@@ -470,6 +506,50 @@ export default function AdminUserManagement({ allUsers }) {
               </div>
             </div>
           </div>
+
+          {/* Current User Permissions Display */}
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Your Current Permissions
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="flex items-center gap-2 text-green-600">
+                <Check className="h-4 w-4" />
+                <span className="font-medium">Read Users</span>
+              </div>
+              <div
+                className={`flex items-center gap-2 ${canInviteUsers ? "text-green-600" : "text-red-600"}`}
+              >
+                {canInviteUsers ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <X className="h-4 w-4" />
+                )}
+                <span className="font-medium">Invite Users</span>
+              </div>
+              <div
+                className={`flex items-center gap-2 ${canEditUsers ? "text-green-600" : "text-red-600"}`}
+              >
+                {canEditUsers ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <X className="h-4 w-4" />
+                )}
+                <span className="font-medium">Edit Users</span>
+              </div>
+              <div
+                className={`flex items-center gap-2 ${canDeleteUsers ? "text-green-600" : "text-red-600"}`}
+              >
+                {canDeleteUsers ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <X className="h-4 w-4" />
+                )}
+                <span className="font-medium">Delete Users</span>
+              </div>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 
@@ -505,94 +585,98 @@ export default function AdminUserManagement({ allUsers }) {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Role Dialog */}
-      <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white">
-          <DialogHeader className="border-b-4 border-black mb-4">
-            <DialogTitle className="text-xl font-bold text-black uppercase tracking-wide">
-              Edit User Role
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6">
-            <div>
-              <Label className="text-sm font-bold text-black tracking-wide">
-                Select New Role
-              </Label>
-              <Label className="text-sm font-bold text-black tracking-wide normal-case">
-                EMAIL: {editingUser?.email}
-              </Label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {ROLES.map((role) => (
-                  <Badge
-                    key={role}
-                    className={`cursor-pointer px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 ${
-                      editingUser?.role === role
-                        ? "bg-orange-400 hover:bg-orange-500 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] translate-y-[-1px]"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      setEditingUser((prev) =>
-                        prev ? { ...prev, role: role } : null,
-                      )
-                    }
-                  >
-                    {role}
-                  </Badge>
-                ))}
+      {/* Edit Role Dialog - Only render if user can edit */}
+      {canEditUsers && (
+        <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white">
+            <DialogHeader className="border-b-4 border-black mb-4">
+              <DialogTitle className="text-xl font-bold text-black uppercase tracking-wide">
+                Edit User Role
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              <div>
+                <Label className="text-sm font-bold text-black tracking-wide">
+                  Select New Role
+                </Label>
+                <Label className="text-sm font-bold text-black tracking-wide normal-case">
+                  EMAIL: {editingUser?.email}
+                </Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {ROLES.map((role) => (
+                    <Badge
+                      key={role}
+                      className={`cursor-pointer px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 ${
+                        editingUser?.role === role
+                          ? "bg-orange-400 hover:bg-orange-500 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] translate-y-[-1px]"
+                          : ""
+                      }`}
+                      onClick={() =>
+                        setEditingUser((prev) =>
+                          prev ? { ...prev, role: role } : null,
+                        )
+                      }
+                    >
+                      {role}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setEditingUser(null)}
+                  className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() =>
+                    editingUser &&
+                    handleRoleUpdate(editingUser.id, editingUser.role)
+                  }
+                  disabled={isPending}
+                  className="bg-green-400 hover:bg-green-500 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold"
+                >
+                  {isPending ? "Updating..." : "Update Role"}
+                </Button>
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setEditingUser(null)}
-                className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold"
-              >
+      {/* Delete Confirmation Dialog - Only render if user can delete */}
+      {canDeleteUsers && (
+        <AlertDialog
+          open={!!deleteUserId}
+          onOpenChange={() => setDeleteUserId(null)}
+        >
+          <AlertDialogContent className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-xl font-bold text-black uppercase tracking-wide">
+                Are you sure?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-black font-medium">
+                This action cannot be undone. This will permanently delete the
+                user account and remove all associated data.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold">
                 Cancel
-              </Button>
-              <Button
-                onClick={() =>
-                  editingUser &&
-                  handleRoleUpdate(editingUser.id, editingUser.role)
-                }
-                disabled={isPending}
-                className="bg-green-400 hover:bg-green-500 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold"
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteUserId && handleDeleteUser(deleteUserId)}
+                className="bg-red-400 hover:bg-red-500 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold"
               >
-                {isPending ? "Updating..." : "Update Role"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={!!deleteUserId}
-        onOpenChange={() => setDeleteUserId(null)}
-      >
-        <AlertDialogContent className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-bold text-black uppercase tracking-wide">
-              Are you sure?
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-black font-medium">
-              This action cannot be undone. This will permanently delete the
-              user account and remove all associated data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteUserId && handleDeleteUser(deleteUserId)}
-              className="bg-red-400 hover:bg-red-500 text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold"
-            >
-              {isPending ? "Deleting..." : "Delete User"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+                {isPending ? "Deleting..." : "Delete User"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }

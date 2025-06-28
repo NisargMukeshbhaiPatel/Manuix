@@ -10,7 +10,6 @@ export function canAccess(role, collection, action) {
 export function createCollectionRBAC(collection) {
   const requireAccess = async (action) => {
     const { user } = await getServerSession(authOptions);
-    console.log(collection, action, canAccess(user.role, collection, action));
     if (!canAccess(user?.role, collection, action)) {
       throw new Error(
         `Access denied: ${user?.role} cannot ${action} ${collection}`,
@@ -40,12 +39,25 @@ export function createCollectionRBAC(collection) {
 }
 
 // For UI rbac
-export function createServerPermissions(role) {
+export async function createServerPermissions() {
+  const session = await getServerSession(authOptions);
+  const role = session?.user?.role;
+
   return {
     // canAccess: (collection, action) => canAccess(role, collection, action),
     canRead: (collection) => canAccess(role, collection, "read"),
     canWrite: (collection) => canAccess(role, collection, "create"),
     canEdit: (collection) => canAccess(role, collection, "update"),
     canDelete: (collection) => canAccess(role, collection, "delete"),
+  };
+}
+export async function createServerPermissionsFromCollection(collection) {
+  const session = await getServerSession(authOptions);
+  const role = session?.user?.role;
+  return {
+    canRead: canAccess(role, collection, "read"),
+    canWrite: canAccess(role, collection, "create"),
+    canEdit: canAccess(role, collection, "update"),
+    canDelete: canAccess(role, collection, "delete"),
   };
 }

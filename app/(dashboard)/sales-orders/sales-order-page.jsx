@@ -63,7 +63,7 @@ import EditSalesOrderDialog from "./components/edit-sales-order-dialog";
 import CreateSalesOrderDialog from "./components/create-sales-dialog";
 import UpdatePaymentDialog from "./components/edit-payment-dialog";
 
-export default function SalesOrdersPage() {
+export default function SalesOrdersPage({ perms }) {
   const [page, setPage] = useState(1);
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [filters, setFilters] = useState({
@@ -96,7 +96,7 @@ export default function SalesOrdersPage() {
     },
     onError: (e) => {
       toast({
-        title: e.message || "Failed to delete product. Please try again.",
+        title: e.message || "Failed to delete sales order. Please try again.",
         variant: "destructive",
       });
     },
@@ -146,6 +146,11 @@ export default function SalesOrdersPage() {
     return <Badge variant={variants[status] || "secondary"}>{status}</Badge>;
   };
 
+  // Check if user can delete this specific order
+  const canDeleteOrder = (order) => {
+    return perms?.canDelete && order.status === "draft";
+  };
+
   if (error) {
     return (
       <div className="container mx-auto py-6">
@@ -165,7 +170,7 @@ export default function SalesOrdersPage() {
       {/* Header with Create Button */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Sales Orders</h1>
-        <CreateSalesOrderDialog />
+        {perms.canWrite && <CreateSalesOrderDialog />}
       </div>
 
       {/* Filters */}
@@ -231,30 +236,38 @@ export default function SalesOrdersPage() {
       </div>
 
       {/* Sales Orders Table */}
-      <div>
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead></TableHead>
+              <TableHead className="w-12"></TableHead>
               <TableHead>Customer</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Payment</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Order Total</TableHead>
-              <TableHead className="">Updated</TableHead>
-              <TableHead className="w-32">Actions</TableHead>
+              <TableHead>Updated</TableHead>
+              {(perms.canEdit || perms.canDelete) && (
+                <TableHead className="text-right">Actions</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
+                <TableCell
+                  colSpan={perms.canEdit || perms.canDelete ? 8 : 7}
+                  className="text-center py-8"
+                >
                   Loading...
                 </TableCell>
               </TableRow>
             ) : data?.data?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
+                <TableCell
+                  colSpan={perms?.canEdit || perms?.canDelete ? 8 : 7}
+                  className="text-center py-8"
+                >
                   No sales orders found
                 </TableCell>
               </TableRow>
@@ -286,97 +299,103 @@ export default function SalesOrdersPage() {
                       {getPaymentStatusBadge(order.payment_status)}
                     </TableCell>
                     <TableCell>${order.payment_amount.toFixed(2)}</TableCell>
-                    <TableCell className="">
-                      ${order.orderTotal.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="">
-                      {formatDate(order.updatedAt)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <EditSalesOrderDialog order={order} />
-                        <UpdatePaymentDialog order={order} />
-                        {order.status === "draft" && (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="sm">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Delete Sales Order
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete this sales
-                                  order? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() =>
-                                    deleteMutation.mutate(order._id)
-                                  }
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        )}
-                      </div>
-                    </TableCell>
+                    <TableCell>${order.orderTotal.toFixed(2)}</TableCell>
+                    <TableCell>{formatDate(order.updatedAt)}</TableCell>
+                    {(perms?.canEdit || perms?.canDelete) && (
+                      <TableCell className="text-right">
+                        <div className="flex items-center gap-1 justify-end">
+                          {perms?.canEdit && (
+                            <>
+                              <EditSalesOrderDialog order={order} />
+                              <UpdatePaymentDialog order={order} />
+                            </>
+                          )}
+                          {canDeleteOrder(order) && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Delete Sales Order
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this sales
+                                    order? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() =>
+                                      deleteMutation.mutate(order._id)
+                                    }
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                   {expandedRows.has(order._id) && (
                     <TableRow>
-                      <TableCell colSpan={8}>
-                        <>
+                      <TableCell
+                        colSpan={perms?.canEdit || perms?.canDelete ? 8 : 7}
+                      >
+                        <div className="px-4 py-4 bg-gray-50">
                           <h4 className="font-semibold mb-3">Order Items</h4>
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Product</TableHead>
-                                <TableHead>SKU</TableHead>
-                                <TableHead>Description</TableHead>
-                                <TableHead>Qty</TableHead>
-                                <TableHead>Unit</TableHead>
-                                <TableHead>Price</TableHead>
-                                <TableHead>Total</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {order.items.map((item) => (
-                                <TableRow key={item._id}>
-                                  <TableCell className="font-medium">
-                                    {item.product?.name || item.product_name}
-                                  </TableCell>
-                                  <TableCell>
-                                    {item.product?.sku || item.sku}
-                                  </TableCell>
-                                  <TableCell>
-                                    <p className="text-sm text-muted-foreground line-clamp-4">
-                                      {item.product?.description ||
-                                        item.description}
-                                    </p>
-                                  </TableCell>
-                                  <TableCell>{item.quantity}</TableCell>
-                                  <TableCell>
-                                    {item.product?.unit || item.unit}
-                                  </TableCell>
-                                  <TableCell>
-                                    ${item.price.toFixed(2)}
-                                  </TableCell>
-                                  <TableCell>
-                                    ${(item.quantity * item.price).toFixed(2)}
-                                  </TableCell>
+                          <div className="rounded-md border bg-white">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Product</TableHead>
+                                  <TableHead>SKU</TableHead>
+                                  <TableHead>Description</TableHead>
+                                  <TableHead>Qty</TableHead>
+                                  <TableHead>Unit</TableHead>
+                                  <TableHead>Price</TableHead>
+                                  <TableHead>Total</TableHead>
                                 </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </>
+                              </TableHeader>
+                              <TableBody>
+                                {order.items.map((item) => (
+                                  <TableRow key={item._id}>
+                                    <TableCell className="font-medium">
+                                      {item.product?.name || item.product_name}
+                                    </TableCell>
+                                    <TableCell>
+                                      {item.product?.sku || item.sku}
+                                    </TableCell>
+                                    <TableCell>
+                                      <p className="text-sm text-muted-foreground line-clamp-4">
+                                        {item.product?.description ||
+                                          item.description}
+                                      </p>
+                                    </TableCell>
+                                    <TableCell>{item.quantity}</TableCell>
+                                    <TableCell>
+                                      {item.product?.unit || item.unit}
+                                    </TableCell>
+                                    <TableCell>
+                                      ${item.price.toFixed(2)}
+                                    </TableCell>
+                                    <TableCell>
+                                      ${(item.quantity * item.price).toFixed(2)}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )}

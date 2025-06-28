@@ -25,7 +25,7 @@ import { DeleteDialog } from "./components/delete-dialog";
 import { Pagination } from "./components/pagination";
 import { EditQuantityDialog } from "./components/edit-quantity-dialog";
 
-export default function InventoryManagement() {
+export default function InventoryManagement({ perms }) {
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [itemType, setItemType] = useState("all");
@@ -179,7 +179,9 @@ export default function InventoryManagement() {
               <TableHead>Unit</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Last Updated</TableHead>
-              <TableHead>Actions</TableHead>
+              {(perms?.canEdit || perms?.canDelete) && (
+                <TableHead>Actions</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -217,12 +219,18 @@ export default function InventoryManagement() {
                     <TableCell>{item.item.unit}</TableCell>
                     <TableCell>${item.item.price.toFixed(2)}</TableCell>
                     <TableCell>{formatDate(item.last_updated)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <EditQuantityDialog queryKey={queryKey} item={item} />
-                        <DeleteDialog item={item} />
-                      </div>
-                    </TableCell>
+                    {(perms?.canEdit || perms?.canDelete) && (
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {perms?.canEdit && (
+                            <EditQuantityDialog queryKey={queryKey} item={item} />
+                          )}
+                          {perms?.canDelete && (
+                            <DeleteDialog item={item} />
+                          )}
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 );
               })

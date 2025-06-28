@@ -5,6 +5,9 @@ import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import {
   ShieldUser as Shield,
+  User,
+  LogOut,
+  Menu,
   LayoutDashboard,
   PackageSearch,
   Boxes,
@@ -12,13 +15,8 @@ import {
   ShoppingCart,
   PackagePlus,
   Banknote,
-  Bell,
   ListOrdered,
-  User,
-  LogOut,
-  Menu,
 } from "lucide-react";
-
 import ManuixLogo from "@/components/logo";
 import {
   Sidebar,
@@ -33,19 +31,19 @@ import {
 } from "@/components/sidebar";
 
 const GreenShield = () => <Shield className="text-green-500" />;
-const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-  { icon: Warehouse, label: "Inventory", href: "/inventory" },
-  { icon: PackagePlus, label: "Purchase Order", href: "/purchases" },
-  { icon: ShoppingCart, label: "Sales Order", href: "/sales-orders" },
-  { icon: Banknote, label: "Finance", href: "/finance" },
-  { icon: PackageSearch, label: "Product Listing", href: "/products" },
-  { icon: ListOrdered, label: "Bill of Materials", href: "/bom" },
-  { icon: Boxes, label: "Raw Materials", href: "/raw-materials" },
-  { icon: GreenShield, label: "User Management", href: "/user-management" },
-];
+const icons = {
+  LayoutDashboard,
+  Warehouse,
+  PackagePlus,
+  ShoppingCart,
+  Banknote,
+  PackageSearch,
+  ListOrdered,
+  Boxes,
+  Shield: GreenShield,
+};
 
-export default function DashSidebar() {
+export default function DashSidebar({ navItems }) {
   const { data: session, status } = useSession();
   const user = session?.user;
   const pathname = usePathname();
@@ -83,6 +81,7 @@ export default function DashSidebar() {
         <SidebarContent className="p-3">
           <SidebarMenu>
             {navItems.map((item) => {
+              const IconComponent = icons[item.icon];
               const isActive =
                 item.href === "/"
                   ? pathname === "/"
@@ -110,7 +109,7 @@ export default function DashSidebar() {
                       href={item.href}
                       className="flex items-center p-2"
                     >
-                      <item.icon />
+                      <IconComponent />
                       {state === "expanded" && (
                         <span className="font-bold">{item.label}</span>
                       )}

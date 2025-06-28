@@ -5,6 +5,7 @@ import { Button } from "@/components/button";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getBOMs } from "@/actions/bom";
 import requirePageAccess from "@/lib/requirePageAccess";
+import { createServerPermissionsFromCollection } from "@/lib/rbac";
 import BOMManagementPage from "./bom-management";
 
 export default async function BOMPage() {
@@ -19,19 +20,23 @@ export default async function BOMPage() {
     queryFn: () => getBOMs(1),
   });
 
+  const perms = await createServerPermissionsFromCollection("boms");
+
   return (
     <div className="space-y-4">
       <div className="md:flex justify-between items-center mb-6">
         <h1 className="text-xl md:text-2xl font-bold">Bill of Materials</h1>
-        <Link href="/bom/create">
-          <Button>
-            <Plus className="w-4 h-4" />
-            Create BOM
-          </Button>
-        </Link>
+        {perms.canWrite && (
+          <Link href="/bom/create">
+            <Button>
+              <Plus className="w-4 h-4" />
+              Create BOM
+            </Button>
+          </Link>
+        )}
       </div>
       <HydrationBoundary state={dehydrate(queryClient)}>
-        <BOMManagementPage />
+        <BOMManagementPage perms={perms} />
       </HydrationBoundary>
     </div>
   );

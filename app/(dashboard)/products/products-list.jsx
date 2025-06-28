@@ -30,7 +30,7 @@ import SearchInput from "@/components/search-input";
 import CreateProductModal from "./components/create-product-modal";
 import DeleteConfirmationDialog from "./components/delete-confirmation-dialog";
 
-export default function ProductsTable() {
+export default function ProductsTable({ perms, fetchBom }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -103,15 +103,17 @@ export default function ProductsTable() {
             placeholder="Product Name"
           />
         </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="shrink-0"
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Create Product
-          </Button>
-        </div>
+        {perms?.canWrite && (
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="shrink-0"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Create Product
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Products Grid */}
@@ -222,23 +224,27 @@ export default function ProductsTable() {
                   <Eye className="h-4 w-4" />
                   View
                 </Button>
-                <Button
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => handleEditProduct(product)}
-                >
-                  <Edit className="h-4 w-4" />
-                  Edit
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => handleDeleteProduct(product)}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete
-                </Button>
+                {perms?.canEdit && (
+                  <Button
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleEditProduct(product)}
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit
+                  </Button>
+                )}
+                {perms?.canDelete && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleDeleteProduct(product)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
+                  </Button>
+                )}
               </CardFooter>
             </Card>
           ))}
@@ -284,28 +290,36 @@ export default function ProductsTable() {
 
       {/* Modals */}
       <ProductViewModal
+				fetchBom={fetchBom}
         product={selectedProduct}
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
       />
 
-      <ProductEditModal
-        product={selectedProduct}
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        queryKey={queryKey}
-      />
-      <CreateProductModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-      />
+      {perms?.canEdit && (
+        <ProductEditModal
+          product={selectedProduct}
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          queryKey={queryKey}
+        />
+      )}
 
-      <DeleteConfirmationDialog
-        product={productToDelete}
-        isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        queryKey={queryKey}
-      />
+      {perms?.canWrite && (
+        <CreateProductModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+        />
+      )}
+
+      {perms?.canDelete && (
+        <DeleteConfirmationDialog
+          product={productToDelete}
+          isOpen={isDeleteDialogOpen}
+          onClose={() => setIsDeleteDialogOpen(false)}
+          queryKey={queryKey}
+        />
+      )}
     </div>
   );
 }

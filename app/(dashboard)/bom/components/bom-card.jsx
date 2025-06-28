@@ -36,7 +36,7 @@ import { toast } from "@/hooks/use-toast";
 import { deleteBOM } from "@/actions/bom";
 import { getInitials, formatDate } from "@/lib/utils";
 
-export function BOMCard({ bom, onView, onSuccess }) {
+export function BOMCard({ bom, onView, onSuccess, perms }) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
   const queryClient = getQueryClient();
@@ -165,41 +165,45 @@ export function BOMCard({ bom, onView, onSuccess }) {
           <Eye className="h-4 w-4" />
           View
         </Button>
-        <Button size="sm" className="flex-1" onClick={handleEdit}>
-          <Edit className="h-4 w-4" />
-          Edit
-        </Button>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="flex-1"
-              disabled={isDeleting}
-            >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Delete
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete BOM</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete the BOM for "{bom.product.name}
-                "? This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+        {perms?.canEdit && (
+          <Button size="sm" className="flex-1" onClick={handleEdit}>
+            <Edit className="h-4 w-4" />
+            Edit
+          </Button>
+        )}
+        {perms?.canDelete && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="flex-1"
+                disabled={isDeleting}
               >
+                <Trash2 className="h-4 w-4 mr-1" />
                 Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete BOM</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete the BOM for "{bom.product.name}
+                  "? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </CardFooter>
     </Card>
   );

@@ -1,15 +1,14 @@
-// import Sidebar from "./components/sidebar/sidebar";
 import { SidebarProvider } from "@/components/sidebar";
-import DashSidebar from './components/sidebar'
+import DashSidebar from "./components/sidebar-server";
 
 import { cookies } from "next/headers";
 
 export default async function DashLayout({ children }) {
-  // const cookieStore = await cookies();
-  const defaultOpen = true;
+  const cookieStore = await cookies();
+  const defaultClose = cookieStore.get("sidebar:state")?.value === "false";
 
   return (
-    <SidebarProvider defaultOpen={defaultOpen}>
+    <SidebarProvider defaultOpen={!defaultClose}>
       <div className="flex h-screen w-full">
         <DashSidebar />
         <div className="flex-1 overflow-hidden">

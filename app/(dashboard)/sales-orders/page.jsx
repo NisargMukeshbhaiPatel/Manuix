@@ -2,6 +2,7 @@ import getQueryClient from "@/lib/query-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getSalesOrders } from "@/actions/sales-order";
 import requirePageAccess from "@/lib/requirePageAccess";
+import { createServerPermissionsFromCollection } from "@/lib/rbac";
 import SalesOrdersPage from "./sales-order-page";
 
 export default async function SalesOrdersServerPage() {
@@ -33,9 +34,11 @@ export default async function SalesOrdersServerPage() {
       }),
   });
 
+  const perms = await createServerPermissionsFromCollection("salesorders");
+
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <SalesOrdersPage />
+      <SalesOrdersPage perms={perms} />
     </HydrationBoundary>
   );
 }
