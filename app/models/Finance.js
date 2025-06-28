@@ -201,6 +201,8 @@ FinanceSchema.statics.createFromSalesOrder = async function(salesOrder, userId) 
 
 // Static method to create a finance entry from a purchase order
 FinanceSchema.statics.createFromPurchaseOrder = async function(purchaseOrder, userId) {
+  console.log('Creating finance entry for purchase order:', purchaseOrder._id);
+  
   if (!purchaseOrder || !purchaseOrder._id) {
     throw new Error('Invalid purchase order');
   }
@@ -216,6 +218,8 @@ FinanceSchema.statics.createFromPurchaseOrder = async function(purchaseOrder, us
       return sum + (itemQty * itemPrice);
     }, 0);
   }
+  
+  console.log('Calculated amount for purchase order:', amount);
   
   if (amount <= 0) {
     throw new Error('Purchase order has no valid amount');
@@ -236,7 +240,12 @@ FinanceSchema.statics.createFromPurchaseOrder = async function(purchaseOrder, us
     reference_number: orderRef,
   });
   
-  return financeEntry.save();
+  console.log('Created finance entry:', financeEntry.toJSON());
+  
+  const saved = await financeEntry.save();
+  console.log('Saved finance entry with ID:', saved._id);
+  
+  return saved;
 };
 
 // Static method to get financial summary for a period

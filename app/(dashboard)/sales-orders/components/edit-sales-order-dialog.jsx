@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import getQueryClient from "@/lib/query-client";
 import { Button } from "@/components/button";
+import { toast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -35,8 +36,19 @@ function EditSalesOrderDialog({ order }) {
   const updateMutation = useMutation({
     mutationFn: (data) => updateSalesOrder(data.id, data.orderData),
     onSuccess: (data) => {
+      if (!data.success) throw new Error(data.error || data.message);
       queryClient.invalidateQueries({ queryKey: ["salesOrders"] });
       setOpen(false);
+      toast({
+        title: "Sales order updated successfully",
+        variant: "default",
+      });
+    },
+    onError: (e) => {
+      toast({
+        title: e.message || "Failed to update sales order. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 

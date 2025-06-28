@@ -221,15 +221,34 @@ export const createSalesOrder = withCreate(async (orderData) => {
     await dbConnect();
     const session = await getServerSession(authOptions);
     // Add the user ID who created the sales order
-    orderData.created_by = session.user.id;    // Calculate total amount if not provided
+    orderData.created_by = session.user.id;    
+    
+    // Calculate total amount if not provided
     if (!orderData.total_amount && orderData.items && orderData.items.length > 0) {
       orderData.total_amount = orderData.items.reduce((total, item) => {
         return total + (item.quantity * item.price);
       }, 0);
     }
 
+    // Handle orders created with 'completed' status
+    const originalStatus = orderData.status;
+    if (originalStatus === 'completed') {
+      // Create the order as draft first, then complete it
+      orderData.status = 'draft';
+    }
+    
     // Create a new sales order
     const salesOrder = await SalesOrder.create(orderData);
+    
+    // If the order was meant to be completed, complete it now
+    if (originalStatus === 'completed') {
+      try {
+        await salesOrder.complete();
+      } catch (error) {
+        console.error('Error completing sales order during creation:', error);
+        // Don't fail the creation if completion fails, but log the error
+      }
+    }
     
     // Populate references for the response
     await salesOrder.populate('created_by', 'name email');
@@ -276,10 +295,20 @@ export const updateSalesOrder = withUpdate(async (id, orderData) => {
     const isStatusChange = orderData.status && orderData.status !== salesOrder.status;
     const oldStatus = salesOrder.status;
     
-    // If this is a status change, use the dedicated method
+    // If this is a status change, use the appropriate method
     const session = await getServerSession(authOptions);
     if (isStatusChange) {
-      await salesOrder.updateStatus(orderData.status, session.user.id);
+      const newStatus = orderData.status;
+      
+      // Handle status changes with proper finance integration
+      if (newStatus === 'completed') {
+        await salesOrder.complete();
+      } else if (newStatus === 'cancelled') {
+        await salesOrder.cancel();
+      } else {
+        // For other status changes, use the updateStatus method
+        await salesOrder.updateStatus(newStatus, session.user.id);
+      }
       
       // Update other fields separately
       delete orderData.status;
@@ -303,7 +332,7 @@ export const updateSalesOrder = withUpdate(async (id, orderData) => {
       data: updatedOrder.toJSON(),
       statusChanged: isStatusChange,
       oldStatus: isStatusChange ? oldStatus : null,
-      newStatus: isStatusChange ? orderData.status : null,
+      newStatus: isStatusChange ? updatedOrder.status : null,
     };
   } catch (error) {
     console.error("Error updating sales order:", error);

@@ -92,9 +92,9 @@ export default function PurchaseOrdersPage() {
       });
       setEditingOrder(null);
     },
-    onError: () => {
+    onError: (e) => {
       toast({
-        title: "Failed to update purchase order",
+        title: e.message || "Failed to update purchase order",
         variant: "destructive",
       });
     },

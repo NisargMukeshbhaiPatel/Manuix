@@ -247,7 +247,7 @@ NotificationSchema.statics.createProductionIssue = async function(options) {
   
   switch(issue_type) {
     case 'material_shortage':
-      message += `Insufficient raw materials to complete production.`;
+      message += details || `Insufficient raw materials to complete production.`;
       break;
     case 'quality_control':
       message += `Quality control check failed.`;

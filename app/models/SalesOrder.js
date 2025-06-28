@@ -2,6 +2,24 @@ import mongoose from "mongoose";
 import User from "@/models/User";
 import Product from "@/models/Product";
 
+// Helper function to get Finance model safely
+const getFinanceModel = () => {
+  try {
+    // First try to get from registered models
+    if (mongoose.models.Finance) {
+      return mongoose.models.Finance;
+    }
+    
+    // If not available, it might not be loaded yet
+    // In a production environment, ensure Finance is imported where this model is used
+    console.log('Finance model not yet loaded in mongoose.models');
+    return null;
+  } catch (error) {
+    console.error('Error getting Finance model:', error);
+    return null;
+  }
+};
+
 // SalesOrderItem Schema (Subdocument)
 const SalesOrderItemSchema = new mongoose.Schema(
   {
@@ -212,7 +230,7 @@ SalesOrderSchema.methods.checkInventoryAvailability = async function() {
   return {
     available: shortages.length === 0,
     shortages,
-    message: shortages.length > 0 ? `Insufficient quantity for ${shortages.length} products` : "All products available"
+    message: shortages.length > 0 ? `Insufficient products: ${shortages.map(s => `${s.productName} (need ${s.required}, have ${s.available})`).join(', ')}` : "All products available"
   };
 };
 
@@ -250,10 +268,18 @@ SalesOrderSchema.methods.complete = async function() {
   await Promise.all(inventoryUpdates);
     // Create finance entry for this income
   try {
-    const Finance = mongoose.models.Finance;
-    if (Finance) {
-      // Pass the current user or find a default user if not available
+    console.log('Creating finance entry for sales order:', this._id);
+    
+    const Finance = getFinanceModel();
+    if (Finance && Finance.createFromSalesOrder) {
+      console.log('Finance model is available, creating entry...');
       await Finance.createFromSalesOrder(this, this.created_by);
+      console.log('Finance entry created successfully for sales order:', this._id);
+    } else {
+      console.log('Finance model or createFromSalesOrder method not available');
+      if (Finance) {
+        console.log('Available Finance methods:', Object.getOwnPropertyNames(Finance));
+      }
     }
   } catch (error) {
     console.error('Failed to create finance entry:', error);
@@ -299,25 +325,44 @@ SalesOrderSchema.methods.cancel = async function() {
   
   const Inventory = mongoose.models.Inventory;
   
-  // If the order was completed, we need to restore inventory
-  if (this.status === 'completed' && Inventory) {
-    const inventoryUpdates = [];
-    
-    for (const item of this.items) {
-      // Add back to inventory
-      inventoryUpdates.push(
-        Inventory.updateStock(
-          'product', 
-          item.product_id, 
-          parseFloat(item.quantity.toString())
-        )
-      );
+  // If the order was completed, we need to restore inventory and remove finance entry
+  if (this.status === 'completed') {
+    // Restore inventory
+    if (Inventory) {
+      const inventoryUpdates = [];
+      
+      for (const item of this.items) {
+        // Add back to inventory
+        inventoryUpdates.push(
+          Inventory.updateStock(
+            'product', 
+            item.product_id, 
+            parseFloat(item.quantity.toString())
+          )
+        );
+      }
+      
+      // Wait for all inventory updates to complete
+      await Promise.all(inventoryUpdates);
     }
     
-    // Wait for all inventory updates to complete
-    await Promise.all(inventoryUpdates);
+    // Remove the finance entry that was created when this order was completed
+    try {
+      const Finance = getFinanceModel();
+      if (Finance) {
+        await Finance.deleteOne({
+          source_type: 'SalesOrder',
+          source_id: this._id,
+          type: 'income'
+        });
+      }
+    } catch (error) {
+      console.error('Failed to remove finance entry:', error);
+      // Don't fail the whole operation if finance entry removal fails
+    }
   }
-    this.status = 'cancelled';
+  
+  this.status = 'cancelled';
   await this.save();
   
   // Create notification for sales order cancellation

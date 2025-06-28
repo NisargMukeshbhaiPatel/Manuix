@@ -131,6 +131,9 @@ BOMSchema.methods.checkInventoryAvailability = async function (quantity = 1) {
   if (!Inventory)
     return { available: false, message: "Inventory model not loaded" };
 
+  // First, populate the raw materials in the items array
+  await this.populate('items.raw_material_id');
+
   const shortages = [];
 
   // Check each raw material
@@ -142,9 +145,8 @@ BOMSchema.methods.checkInventoryAvailability = async function (quantity = 1) {
     );
 
     if (availableQty < requiredQty) {
-      // Need to get the material name
-      await item.populate("raw_material_id");
-      const materialName = item.raw_material_id.name || "Unknown material";
+      // Now we can access the material name directly
+      const materialName = item.raw_material_id?.name || "Unknown material";
 
       shortages.push({
         materialId: item.raw_material_id._id,
@@ -161,7 +163,7 @@ BOMSchema.methods.checkInventoryAvailability = async function (quantity = 1) {
     shortages,
     message:
       shortages.length > 0
-        ? `Insufficient quantity for ${shortages.length} materials`
+        ? `Insufficient materials: ${shortages.map(s => `${s.materialName} (need ${s.required}, have ${s.available})`).join(', ')}`
         : "All materials available",
   };
 };

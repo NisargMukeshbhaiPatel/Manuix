@@ -2,6 +2,24 @@ import mongoose from "mongoose";
 import User from "@/models/User";
 import RawMaterial from "@/models/RawMaterial";
 
+// Helper function to get Finance model safely
+const getFinanceModel = () => {
+  try {
+    // First try to get from registered models
+    if (mongoose.models.Finance) {
+      return mongoose.models.Finance;
+    }
+    
+    // If not available, it might not be loaded yet
+    // In a production environment, ensure Finance is imported where this model is used
+    console.log('Finance model not yet loaded in mongoose.models');
+    return null;
+  } catch (error) {
+    console.error('Error getting Finance model:', error);
+    return null;
+  }
+};
+
 // PurchaseOrderItem Schema (Subdocument)
 const PurchaseOrderItemSchema = new mongoose.Schema(
   {
@@ -218,10 +236,18 @@ PurchaseOrderSchema.methods.receive = async function() {
   await Promise.all(inventoryUpdates);
     // Create finance entry for this expense
   try {
-    const Finance = mongoose.models.Finance;
-    if (Finance) {
-      // Pass the current user or find a default user if not available
+    console.log('Creating finance entry for purchase order:', this._id);
+    
+    const Finance = getFinanceModel();
+    if (Finance && Finance.createFromPurchaseOrder) {
+      console.log('Finance model is available, creating entry...');
       await Finance.createFromPurchaseOrder(this, this.created_by);
+      console.log('Finance entry created successfully for purchase order:', this._id);
+    } else {
+      console.log('Finance model or createFromPurchaseOrder method not available');
+      if (Finance) {
+        console.log('Available Finance methods:', Object.getOwnPropertyNames(Finance));
+      }
     }
   } catch (error) {
     console.error('Failed to create finance entry:', error);
@@ -248,6 +274,94 @@ PurchaseOrderSchema.methods.receive = async function() {
         customer_or_supplier: this.supplier_name,
         action_url: `/purchase-orders/${this._id}`,
         priority: 3,
+      });
+    }
+  } catch (error) {
+    console.error('Failed to create notification:', error);
+    // Don't fail the whole operation if notification creation fails
+  }
+  
+  return this;
+};
+
+// Method to directly receive a purchase order (place then receive)
+PurchaseOrderSchema.methods.placeAndReceive = async function() {
+  if (this.status !== 'draft') {
+    throw new Error(`Cannot place and receive purchase order that is already ${this.status}`);
+  }
+  
+  // First place the order
+  await this.place();
+  
+  // Then receive it
+  await this.receive();
+  
+  return this;
+};
+
+// Method to cancel a purchase order
+PurchaseOrderSchema.methods.cancel = async function() {
+  if (this.status === 'cancelled') {
+    throw new Error('Order is already cancelled');
+  }
+  
+  const Inventory = mongoose.models.Inventory;
+  
+  // If the order was received, we need to remove items from inventory and remove finance entry
+  if (this.status === 'received') {
+    // Remove items from inventory
+    if (Inventory) {
+      const inventoryUpdates = [];
+      
+      for (const item of this.items) {
+        inventoryUpdates.push(
+          Inventory.updateStock(
+            'raw_material', 
+            item.raw_material_id, 
+            -parseFloat(item.quantity.toString())
+          )
+        );
+      }
+      
+      // Wait for all inventory updates to complete
+      await Promise.all(inventoryUpdates);
+    }
+    
+    // Remove the finance entry that was created when this order was received
+    try {
+      const Finance = getFinanceModel();
+      if (Finance) {
+        await Finance.deleteOne({
+          source_type: 'PurchaseOrder',
+          source_id: this._id,
+          type: 'expense'
+        });
+      }
+    } catch (error) {
+      console.error('Failed to remove finance entry:', error);
+      // Don't fail the whole operation if finance entry removal fails
+    }
+  }
+  
+  this.status = 'cancelled';
+  await this.save();
+  
+  // Create notification for purchase order cancellation
+  try {
+    const Notification = mongoose.models.Notification;
+    if (Notification) {
+      // Get the order ID in a readable format
+      const orderReference = `PO-${this._id.toString().slice(-6).toUpperCase()}`;
+      
+      await Notification.createOrderStatusNotification({
+        user_id: this.created_by,
+        order_type: 'purchase',
+        order_id: this._id,
+        order_reference: orderReference,
+        status: 'cancelled',
+        customer_or_supplier: this.supplier_name,
+        action_url: `/purchase-orders/${this._id}`,
+        priority: 2, // Higher priority for cancellations
       });
     }
   } catch (error) {

@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import PurchaseOrder from "@/models/PurchaseOrder";
 import Inventory from "@/models/Inventory";
+import Finance from "@/models/Finance"; // Import Finance to ensure it's loaded
 import { createCollectionRBAC } from "@/lib/rbac";
 
 const { withCreate, withRead, withUpdate, withDelete } = createCollectionRBAC("purchaseorders");
@@ -233,23 +234,46 @@ export const createPurchaseOrder = withCreate(async (orderData) => {
       }, 0);
     }
 
+    // Handle orders created with non-draft status
+    const originalStatus = orderData.status;
+    if (originalStatus && originalStatus !== 'draft') {
+      // Create the order as draft first, then change status
+      orderData.status = 'draft';
+    }
+    
     // Create a new purchase order
     const purchaseOrder = await PurchaseOrder.create(orderData);
 
-    // Update inventory for each raw material in the purchase order
-    if (orderData.items && orderData.items.length > 0) {
-      for (const item of orderData.items) {
-        try {
-          // Add the purchased quantity to raw material inventory
-          await Inventory.updateStock(
-            'raw_material',
-            item.raw_material_id,
-            parseFloat(item.quantity),
-            { userId: session.user.id }
-          );
-        } catch (inventoryError) {
-          console.error(`Error updating inventory for raw material ${item.raw_material_id}:`, inventoryError);
-          // Continue with other items even if one fails
+    // If the order was meant to have a different status, handle it now
+    if (originalStatus === 'placed') {
+      try {
+        await purchaseOrder.place();
+      } catch (error) {
+        console.error('Error placing purchase order during creation:', error);
+      }
+    } else if (originalStatus === 'received') {
+      try {
+        // Use the helper method to place and receive in sequence
+        await purchaseOrder.placeAndReceive();
+      } catch (error) {
+        console.error('Error receiving purchase order during creation:', error);
+      }
+    } else if (originalStatus === 'draft') {
+      // For draft orders, update inventory immediately as before
+      if (orderData.items && orderData.items.length > 0) {
+        for (const item of orderData.items) {
+          try {
+            // Add the purchased quantity to raw material inventory
+            await Inventory.updateStock(
+              'raw_material',
+              item.raw_material_id,
+              parseFloat(item.quantity),
+              { userId: session.user.id }
+            );
+          } catch (inventoryError) {
+            console.error(`Error updating inventory for raw material ${item.raw_material_id}:`, inventoryError);
+            // Continue with other items even if one fails
+          }
         }
       }
     }
@@ -301,111 +325,36 @@ export const updatePurchaseOrder = withUpdate(async (id, orderData) => {
     
     const session = await getServerSession(authOptions);
     
-    // Handle inventory updates based on status changes
+    // If this is a status change, use the appropriate method
     if (isStatusChange) {
-      // If changing from any status to "received", add items to inventory
-      if (orderData.status === 'received' && oldStatus !== 'received') {
-        const itemsToAdd = orderData.items || purchaseOrder.items;
-        if (itemsToAdd && itemsToAdd.length > 0) {
-          for (const item of itemsToAdd) {
-            try {
-              await Inventory.updateStock(
-                'raw_material',
-                item.raw_material_id,
-                parseFloat(item.quantity),
-                { userId: session.user.id }
-              );
-            } catch (inventoryError) {
-              console.error(`Error updating inventory for raw material ${item.raw_material_id}:`, inventoryError);
-            }
-          }
+      const newStatus = orderData.status;
+      
+      // Handle status changes with proper finance integration
+      if (newStatus === 'placed') {
+        await purchaseOrder.place();
+      } else if (newStatus === 'received') {
+        // If current status is 'draft', we need to place first, then receive
+        if (purchaseOrder.status === 'draft') {
+          await purchaseOrder.placeAndReceive();
+        } else if (purchaseOrder.status === 'placed') {
+          await purchaseOrder.receive();
+        } else {
+          throw new Error(`Cannot receive order from status: ${purchaseOrder.status}`);
         }
+      } else if (newStatus === 'cancelled') {
+        await purchaseOrder.cancel();
+      } else {
+        // For other status changes, just update the status
+        purchaseOrder.status = newStatus;
+        await purchaseOrder.save();
       }
-      
-      // If changing from "received" to another status, remove items from inventory
-      if (oldStatus === 'received' && orderData.status !== 'received') {
-        if (purchaseOrder.items && purchaseOrder.items.length > 0) {
-          for (const item of purchaseOrder.items) {
-            try {
-              await Inventory.updateStock(
-                'raw_material',
-                item.raw_material_id,
-                -parseFloat(item.quantity), // Negative to remove from inventory
-                { userId: session.user.id }
-              );
-            } catch (inventoryError) {
-              console.error(`Error removing inventory for raw material ${item.raw_material_id}:`, inventoryError);
-            }
-          }
-        }
-      }
-    }
-    
-    // Handle inventory updates for quantity changes (only if status is received)
-    if (isItemsChange && (purchaseOrder.status === 'received' || orderData.status === 'received')) {
-      // Calculate the difference between old and new quantities
-      const oldItems = purchaseOrder.items || [];
-      const newItems = orderData.items || [];
-      
-      // Create maps for easy comparison
-      const oldItemsMap = new Map();
-      oldItems.forEach(item => {
-        oldItemsMap.set(item.raw_material_id.toString(), parseFloat(item.quantity));
-      });
-      
-      const newItemsMap = new Map();
-      newItems.forEach(item => {
-        newItemsMap.set(item.raw_material_id.toString(), parseFloat(item.quantity));
-      });
-      
-      // Update inventory based on quantity differences
-      for (const [materialId, newQuantity] of newItemsMap) {
-        const oldQuantity = oldItemsMap.get(materialId) || 0;
-        const quantityDiff = newQuantity - oldQuantity;
-        
-        if (quantityDiff !== 0) {
-          try {
-            await Inventory.updateStock(
-              'raw_material',
-              materialId,
-              quantityDiff,
-              { userId: session.user.id }
-            );
-          } catch (inventoryError) {
-            console.error(`Error updating inventory for raw material ${materialId}:`, inventoryError);
-          }
-        }
-      }
-      
-      // Handle removed items (items that were in old but not in new)
-      for (const [materialId, oldQuantity] of oldItemsMap) {
-        if (!newItemsMap.has(materialId)) {
-          try {
-            await Inventory.updateStock(
-              'raw_material',
-              materialId,
-              -oldQuantity, // Remove the entire old quantity
-              { userId: session.user.id }
-            );
-          } catch (inventoryError) {
-            console.error(`Error removing inventory for raw material ${materialId}:`, inventoryError);
-          }
-        }
-      }
-    }
-    
-    // Update the purchase order
-    if (isStatusChange) {
-      // Update the status
-      purchaseOrder.status = orderData.status;
       
       // Update other fields separately
       delete orderData.status;
       if (Object.keys(orderData).length > 0) {
         Object.assign(purchaseOrder, orderData);
+        await purchaseOrder.save();
       }
-      
-      await purchaseOrder.save();
     } else {
       // Standard update for non-status changes
       Object.assign(purchaseOrder, orderData);
@@ -422,15 +371,17 @@ export const updatePurchaseOrder = withUpdate(async (id, orderData) => {
       data: updatedOrder.toJSON(),
       statusChanged: isStatusChange,
       oldStatus: isStatusChange ? oldStatus : null,
-      newStatus: isStatusChange ? orderData.status : null,
+      newStatus: isStatusChange ? updatedOrder.status : null,
       message: "Purchase order updated successfully" + 
-               (isStatusChange || isItemsChange ? " and inventory updated" : ""),
+               (isStatusChange ? " with finance integration" : ""),
     };
   } catch (error) {
     console.error("Error updating purchase order:", error);
+    console.error("Order ID:", id);
+    console.error("Order data:", orderData);
     return {
       success: false,
-      message: "Failed to update purchase order",
+      message: "Failed to update purchase order: " + error.message,
       error: error.message,
     };
   }
