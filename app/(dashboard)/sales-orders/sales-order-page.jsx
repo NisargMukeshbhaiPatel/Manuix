@@ -407,7 +407,7 @@ export default function SalesOrdersPage({ perms }) {
       </div>
 
       {/* Pagination */}
-      {data?.pagination && data.pagination.total > data.limit && (
+      {data?.pagination.pages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
             Showing {(data.pagination.page - 1) * data.pagination.limit + 1} to{" "}
