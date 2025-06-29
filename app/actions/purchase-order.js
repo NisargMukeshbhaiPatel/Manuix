@@ -99,40 +99,60 @@ export const getPurchaseOrders = withRead(async ({
 /**
  * Get purchase order statistics
  */
-export const getPurchaseOrderStats = withRead(async ({ period = 'month' } = {}) => {
+export const getPurchaseOrderStats = withRead(async ({ period = 'all' } = {}) => {
   try {
     // Connect to the database
     await dbConnect();
-
+    
     // Set the date range based on the period
     const now = new Date();
-    let startDate;
+    let startDate = null; // Default to null for all-time stats
     
-    switch (period) {
-      case 'week':
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 7);
-        break;
-      case 'month':
-        startDate = new Date(now);
-        startDate.setMonth(now.getMonth() - 1);
-        break;
-      case 'quarter':
-        startDate = new Date(now);
-        startDate.setMonth(now.getMonth() - 3);
-        break;
-      case 'year':
-        startDate = new Date(now);
-        startDate.setFullYear(now.getFullYear() - 1);
-        break;
-      default:
-        startDate = new Date(now);
-        startDate.setMonth(now.getMonth() - 1); // Default to month
+    if (period !== 'all') {
+      switch (period) {
+        case 'week':
+          startDate = new Date(now);
+          startDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          startDate = new Date(now);
+          startDate.setMonth(now.getMonth() - 1);
+          break;
+        case 'quarter':
+          startDate = new Date(now);
+          startDate.setMonth(now.getMonth() - 3);
+          break;
+        case 'year':
+          startDate = new Date(now);
+          startDate.setFullYear(now.getFullYear() - 1);
+          break;
+        default:
+          startDate = null; // Default to all-time
+      }
     }
-
-    // Get counts by status
+    
+    // Build the match query - only add date filter if startDate is set
+    const matchQuery = startDate ? { createdAt: { $gte: startDate } } : {};
+    
+    // Calculate total amount from items array
     const statusQuery = [
-      { $match: { order_date: { $gte: startDate } } },
+      { $match: matchQuery },
+      {
+        $addFields: {
+          total_amount: {
+            $reduce: {
+              input: "$items",
+              initialValue: 0,
+              in: {
+                $add: [
+                  "$value",
+                  { $multiply: ["$this.quantity", "$this.price"] }
+                ]
+              }
+            }
+          }
+        }
+      },
       {
         $group: {
           _id: "$status",
@@ -147,10 +167,8 @@ export const getPurchaseOrderStats = withRead(async ({ period = 'month' } = {}) 
     // Process into a more usable format
     const stats = {
       draft: { count: 0, total: 0 },
-      pending: { count: 0, total: 0 },
-      received: { count: 0, total: 0 },
-      cancelled: { count: 0, total: 0 },
       completed: { count: 0, total: 0 },
+      cancelled: { count: 0, total: 0 },
       total_orders: 0,
       total_amount: 0,
       period,
@@ -166,7 +184,7 @@ export const getPurchaseOrderStats = withRead(async ({ period = 'month' } = {}) 
         stats.total_amount += stat.total;
       }
     });
-
+    
     return {
       success: true,
       data: stats

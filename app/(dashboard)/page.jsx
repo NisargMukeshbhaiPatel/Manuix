@@ -1,19 +1,10 @@
-import getQueryClient from "@/lib/query-client";
-import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import Dashboard from "./components/dashboard";
 
-export default async function Dashboard() {
-// NOTE: don't use requirePageAccess as this route is the fallback
-  const queryClient = getQueryClient();
-
-  // await queryClient.prefetchQuery({
-  //   queryKey: ["rawMaterials"],
-  //   queryFn: () => getRawMaterials(),
-  // });
-
+export default async function MainDashboard() {
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
-      {/* <HydrationBoundary state={dehydrate(queryClient)}></HydrationBoundary> */}
+      <h1 className="text-xl md:text-2xl font-bold">Dashboard</h1>
+      <Dashboard />
     </div>
   );
 }

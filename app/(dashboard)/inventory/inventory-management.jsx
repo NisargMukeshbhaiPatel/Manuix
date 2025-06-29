@@ -223,11 +223,12 @@ export default function InventoryManagement({ perms }) {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {perms?.canEdit && (
-                            <EditQuantityDialog queryKey={queryKey} item={item} />
+                            <EditQuantityDialog
+                              queryKey={queryKey}
+                              item={item}
+                            />
                           )}
-                          {perms?.canDelete && (
-                            <DeleteDialog item={item} />
-                          )}
+                          {perms?.canDelete && <DeleteDialog item={item} />}
                         </div>
                       </TableCell>
                     )}
@@ -240,7 +241,7 @@ export default function InventoryManagement({ perms }) {
       </div>
 
       {/* Pagination */}
-      {data?.pagination && data?.data.length > data.limit && (
+      {data?.pagination && data.pagination.pages > 1 && (
         <div className="mt-4">
           <Pagination
             currentPage={data.pagination.page}

@@ -2,7 +2,8 @@
   "compilerOptions": {
     "paths": {
       "@/*": ["./app/*"],
-      "@/components/*": ["./app/ui/components/*"]
+      "@/components/*": ["./app/ui/components/*"],
+      "@/hooks/*": ["./app/hooks/*"]
     }
   }
 }

@@ -59,10 +59,10 @@ const allNavItems = [
 ];
 
 export default async function ServerDashSidebar() {
-  const { canRead } = await createServerPermissions();
+  const { canRead, role } = await createServerPermissions();
 
   const filteredNavItems = allNavItems.filter((item) => {
-    if (item.collection === "dashboard") {
+    if (item.collection === "dashboard" && role !== "user") {
       return true;
     }
     return canRead(item.collection);

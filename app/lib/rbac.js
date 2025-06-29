@@ -49,6 +49,7 @@ export async function createServerPermissions() {
     canWrite: (collection) => canAccess(role, collection, "create"),
     canEdit: (collection) => canAccess(role, collection, "update"),
     canDelete: (collection) => canAccess(role, collection, "delete"),
+    role,
   };
 }
 export async function createServerPermissionsFromCollection(collection) {
