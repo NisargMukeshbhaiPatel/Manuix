@@ -172,7 +172,7 @@ export function InventoryManagement() {
             <Wrench className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalRawMaterials}</div>
+			<div className="text-2xl font-bold">{parseInt(stats.totalRawMaterials)}</div>
             <p className="text-xs text-muted-foreground">
               {stats.rawMaterialCount} different materials
             </p>
