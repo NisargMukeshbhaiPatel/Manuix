@@ -14,7 +14,7 @@ export function DashboardSummary({ perms }) {
     from: addDays(new Date(), -30),
     to: new Date(),
   });
-
+  
   const { data: summary, isLoading } = useQuery({
     queryKey: [
       "summary",
@@ -22,7 +22,9 @@ export function DashboardSummary({ perms }) {
         startDate: dateRange?.from
           ? format(dateRange.from, "yyyy-MM-dd")
           : null,
-        endDate: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : null,
+        endDate: dateRange?.to 
+          ? format(addDays(dateRange.to, 1), "yyyy-MM-dd")
+          : null,
       },
     ],
     queryFn: () =>
@@ -30,7 +32,9 @@ export function DashboardSummary({ perms }) {
         startDate: dateRange?.from
           ? format(dateRange.from, "yyyy-MM-dd")
           : null,
-        endDate: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : null,
+        endDate: dateRange?.to 
+          ? format(addDays(dateRange.to, 1), "yyyy-MM-dd")
+          : null,
       }),
   });
 

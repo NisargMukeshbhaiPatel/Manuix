@@ -19,7 +19,7 @@ export function useFinanceSummary() {
     queryFn: () =>
       getFinanceSummary({
         startDate: format(addDays(new Date(), -30), "yyyy-MM-dd"),
-        endDate: format(new Date(), "yyyy-MM-dd"),
+        endDate: format(addDays(new Date(), 1), "yyyy-MM-dd"),
       }),
   });
 }
