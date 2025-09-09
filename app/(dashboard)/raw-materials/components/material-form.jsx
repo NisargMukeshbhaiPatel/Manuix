@@ -47,13 +47,12 @@ export default function MaterialForm({
         <Input
           id="price"
           type="number"
-          step="0.01"
           min="0"
           value={formData.price}
           onChange={(e) =>
             setFormData({
               ...formData,
-              price: Number.parseFloat(e.target.value) || 0,
+              price: parseInt(e.target.value) || 0,
             })
           }
           placeholder="Enter price"

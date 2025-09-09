@@ -263,12 +263,11 @@ export default function EditBOMTable() {
                 <Input
                   id="productPrice"
                   type="number"
-                  step="0.01"
                   value={productData.price}
                   onChange={(e) =>
                     setProductData((prev) => ({
                       ...prev,
-                      price: parseFloat(e.target.value) || 0,
+                      price: parseInt(e.target.value) || 0,
                     }))
                   }
                 />
@@ -335,12 +334,11 @@ export default function EditBOMTable() {
                       <Input
                         id="materialPrice"
                         type="number"
-                        step="0.01"
                         value={newMaterial.price}
                         onChange={(e) =>
                           setNewMaterial((prev) => ({
                             ...prev,
-                            price: parseFloat(e.target.value) || 0,
+                            price: parseInt(e.target.value) || 0,
                           }))
                         }
                         placeholder="Enter price"
@@ -497,12 +495,11 @@ export default function EditBOMTable() {
                         <Input
                           type="number"
                           min="0"
-                          step="0.01"
                           value={item.quantity}
                           onChange={(e) =>
                             updateItemQuantity(
                               item.raw_material_id,
-                              parseFloat(e.target.value) || 0,
+                              parseInt(e.target.value) || 0,
                             )
                           }
                           className="w-20 text-center"

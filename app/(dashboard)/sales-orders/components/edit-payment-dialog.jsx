@@ -97,12 +97,11 @@ export default function UpdatePaymentDialog({ order }) {
             <Input
               id="payment_amount"
               type="number"
-              step="0.01"
               value={paymentData.payment_amount}
               onChange={(e) =>
                 setPaymentData((prev) => ({
                   ...prev,
-                  payment_amount: parseFloat(e.target.value) || 0,
+                  payment_amount: parseInt(e.target.value) || 0,
                 }))
               }
               placeholder="0.00"

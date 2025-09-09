@@ -154,10 +154,9 @@ export function TransactionModal({ isOpen, onClose, transaction }) {
             <Input
               id="amount"
               type="number"
-              step="0.01"
               value={formData.amount}
               onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              placeholder="0.00"
+              placeholder="0"
               required
             />
           </div>

@@ -372,7 +372,6 @@ export default function CreatePurchaseOrderForm() {
                         placeholder="Enter quantity"
                         disabled={mutation.isPending}
                         min="1"
-                        step="0.01"
                       />
                     </div>
                     <div className="space-y-2">
@@ -383,8 +382,7 @@ export default function CreatePurchaseOrderForm() {
                         onChange={(e) => updateItem(index, "price", e.target.value)}
                         placeholder="Enter unit price"
                         disabled={mutation.isPending}
-                        min="0.01"
-                        step="0.01"
+                        min="0"
                       />
                     </div>
                   </div>

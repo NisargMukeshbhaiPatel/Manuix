@@ -345,12 +345,11 @@ export default function CreateBOMForm() {
                         <Input
                           id="material-price"
                           type="number"
-                          step="0.01"
                           value={newMaterial.price}
                           onChange={(e) =>
                             setNewMaterial({
                               ...newMaterial,
-                              price: parseFloat(e.target.value) || 0,
+                              price: parseInt(e.target.value) || 0,
                             })
                           }
                           placeholder="Enter price"

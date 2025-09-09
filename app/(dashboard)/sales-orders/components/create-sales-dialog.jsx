@@ -257,12 +257,11 @@ export default function CreateSalesOrderDialog() {
               <Input
                 id="payment_amount"
                 type="number"
-                step="0.01"
                 value={formData.payment_amount}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    payment_amount: parseFloat(e.target.value) || 0,
+                    payment_amount: parseInt(e.target.value) || 0,
                   }))
                 }
                 placeholder="0.00"
@@ -340,15 +339,14 @@ export default function CreateSalesOrderDialog() {
                 <Input
                   id="price"
                   type="number"
-                  step="0.01"
                   value={currentItem.price}
                   onChange={(e) =>
                     setCurrentItem((prev) => ({
                       ...prev,
-                      price: parseFloat(e.target.value) || 0,
+                      price: parseInt(e.target.value) || 0,
                     }))
                   }
-                  placeholder="0.00"
+                  placeholder="0"
                 />
               </div>
               <div>

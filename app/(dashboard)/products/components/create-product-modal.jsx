@@ -182,13 +182,12 @@ export default function CreateProductModal({ isOpen, onClose, withBom }) {
               <Input
                 id="create-price"
                 type="number"
-                step="0.01"
-                min="0.01"
+                min="0"
                 value={formData.price || ""}
                 onChange={(e) =>
                   handleInputChange(
                     "price",
-                    Number.parseFloat(e.target.value) || 0,
+                    parseInt(e.target.value) || 0,
                   )
                 }
                 placeholder="0.00"
