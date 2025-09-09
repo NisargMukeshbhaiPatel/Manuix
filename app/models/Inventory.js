@@ -176,11 +176,21 @@ InventorySchema.statics.produceProducts = async function(productId, quantity, op
     // Check if the product can be produced
     const productionCheck = await product.canProduce(quantity);
     if (!productionCheck.canProduce) {
+      // If cannot produce, create a draft
+      const ProductionDraft = mongoose.models.ProductionDraft;
+      if (ProductionDraft) {
+        await ProductionDraft.create({
+          product_id: productId,
+          quantity: quantity,
+          created_by: options.userId || null,
+        });
+      }
       return {
         success: false,
         message: productionCheck.message,
         shortages: productionCheck.shortages || [],
-        producibleQuantity: productionCheck.producibleQuantity || 0
+        producibleQuantity: productionCheck.producibleQuantity || 0,
+        draftCreated: true
       };
     }
 
@@ -198,7 +208,6 @@ InventorySchema.statics.produceProducts = async function(productId, quantity, op
       // Deduct raw materials from inventory
       for (const bomItem of bom.items) {
         const requiredQuantity = parseFloat(bomItem.quantity.toString()) * quantity;
-        
         // Update raw material inventory (negative change to deduct)
         await this.updateStock(
           'raw_material',
