@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/skeleton";
 import { AlertTriangle, Package, ShoppingCart, Wrench } from "lucide-react";
 import { useMemo } from "react";
 import { Bar, Doughnut } from "react-chartjs-2";
+import { currency } from "@/lib/utils";
 
 const chartOptions = {
   responsive: true,
@@ -185,7 +186,7 @@ export function InventoryManagement() {
             <Package className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{stats.totalValue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{currency}{stats.totalValue.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
               Combined value
             </p>

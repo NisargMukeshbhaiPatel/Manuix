@@ -24,6 +24,7 @@ import {
 import { Save, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { createProduct } from "@/actions/product";
+import { currency } from "@/lib/utils";
 
 export default function CreateProductModal({ isOpen, onClose, withBom }) {
   const queryClient = getQueryClient();
@@ -178,7 +179,7 @@ export default function CreateProductModal({ isOpen, onClose, withBom }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="create-price">Price ($) *</Label>
+              <Label htmlFor="create-price">Price ({currency}) *</Label>
               <Input
                 id="create-price"
                 type="number"

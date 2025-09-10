@@ -26,6 +26,7 @@ import {
   Legend,
   ArcElement,
 } from "chart.js";
+import { currency } from "@/lib/utils";
 
 ChartJS.register(
   CategoryScale,
@@ -189,7 +190,7 @@ export function FinancialAnalytics() {
       labels: sortedCategories.map(([name]) => name),
       datasets: [
         {
-          label: "Amount ($)",
+          label: "Amount (" + currency + ")",
           data: sortedCategories.map(([, value]) => value),
           backgroundColor: [
             "rgba(59, 130, 246, 0.8)",
@@ -234,7 +235,7 @@ export function FinancialAnalytics() {
       labels: sortedCustomers.map(([name]) => name),
       datasets: [
         {
-          label: "Revenue ($)",
+          label: "Revenue (" + currency + ")",
           data: sortedCustomers.map(([, value]) => value),
           backgroundColor: "rgba(59, 130, 246, 0.8)",
           borderColor: "rgb(59, 130, 246)",
@@ -249,20 +250,20 @@ export function FinancialAnalytics() {
     if (!filteredTransactions.length) return { labels: [], datasets: [] };
 
     const volumeRanges = {
-      "Under $100": 0,
-      "$100 - $500": 0,
-      "$500 - $1,000": 0,
-      "$1,000 - $5,000": 0,
-      "$5,000+": 0,
+      "Under 100": 0,
+      "100 - 500": 0,
+      "500 - 1,000": 0,
+      "1,000 - 5,000": 0,
+      "5,000+": 0,
     };
 
     filteredTransactions.forEach((transaction) => {
       const amount = Number(transaction.amount);
-      if (amount < 100) volumeRanges["Under $100"]++;
-      else if (amount < 500) volumeRanges["$100 - $500"]++;
-      else if (amount < 1000) volumeRanges["$500 - $1,000"]++;
-      else if (amount < 5000) volumeRanges["$1,000 - $5,000"]++;
-      else volumeRanges["$5,000+"]++;
+      if (amount < 100) volumeRanges["Under 100"]++;
+      else if (amount < 500) volumeRanges["100 - 500"]++;
+      else if (amount < 1000) volumeRanges["500 - 1000"]++;
+      else if (amount < 5000) volumeRanges["1000 - 5000"]++;
+      else volumeRanges["5000+"]++;
     });
 
     return {
@@ -351,7 +352,7 @@ export function FinancialAnalytics() {
       labels: sortedPeriods.map(([date]) => date),
       datasets: [
         {
-          label: "Cash Flow ($)",
+          label: "Cash Flow (" + currency + ")",
           data: sortedPeriods.map(([, balance]) => balance),
           borderColor: "rgb(168, 85, 247)",
           backgroundColor: "rgba(168, 85, 247, 0.2)",
@@ -479,7 +480,7 @@ export function FinancialAnalytics() {
         {/* Transaction Volume Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle>Transaction Volume</CardTitle>
+            <CardTitle>Transaction Volume {currency}</CardTitle>
             <CardDescription>
               Number of transactions by amount range
             </CardDescription>

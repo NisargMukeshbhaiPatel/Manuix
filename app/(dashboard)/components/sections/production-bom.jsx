@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/skeleton";
 import { AlertTriangle, CheckCircle, XCircle, Package } from "lucide-react";
 import { useMemo } from "react";
 import { Pie, Bar, Doughnut } from "react-chartjs-2";
+import { currency, formatPrice } from "@/lib/utils";
 
 const chartOptions = {
   responsive: true,
@@ -71,7 +72,7 @@ export function ProductionBOM() {
       labels: costAnalysis.map((item) => item.name),
       datasets: [
         {
-          label: "Cost ($)",
+          label: "Cost ("+ currency +")",
           data: costAnalysis.map((item) => item.cost),
           backgroundColor: "rgba(139, 92, 246, 0.8)",
           borderColor: "rgb(139, 92, 246)",
@@ -109,21 +110,21 @@ export function ProductionBOM() {
       labels: analysis.map((item) => item.name),
       datasets: [
         {
-          label: "Product Price ($)",
+          label: "Product Price ("+ currency +")",
           data: analysis.map((item) => item.productPrice),
           backgroundColor: "rgba(34, 197, 94, 0.8)",
           borderColor: "rgb(34, 197, 94)",
           borderWidth: 1,
         },
         {
-          label: "BOM Cost ($)",
+          label: "BOM Cost ("+ currency +")",
           data: analysis.map((item) => item.bomCost),
           backgroundColor: "rgba(239, 68, 68, 0.8)",
           borderColor: "rgb(239, 68, 68)",
           borderWidth: 1,
         },
         {
-          label: "Profit ($)",
+          label: "Profit ("+ currency +")",
           data: analysis.map((item) => item.profit),
           backgroundColor: "rgba(59, 130, 246, 0.8)",
           borderColor: "rgb(59, 130, 246)",
@@ -216,11 +217,11 @@ export function ProductionBOM() {
     if (!boms?.boms || !rawMaterials?.data) return { labels: [], datasets: [] };
 
     const costRanges = {
-      "Under $50": 0,
-      "$50 - $100": 0,
-      "$100 - $200": 0,
-      "$200 - $500": 0,
-      "$500+": 0,
+      "Under 50": 0,
+      "50 - 100": 0,
+      "100 - 200": 0,
+      "200 - 500": 0,
+      "500+": 0,
     };
 
     boms.boms.forEach((bom) => {
@@ -232,11 +233,11 @@ export function ProductionBOM() {
           return sum + Number(item.quantity) * Number(material?.price || 0);
         }, 0) || 0;
 
-      if (totalCost < 50) costRanges["Under $50"]++;
-      else if (totalCost < 100) costRanges["$50 - $100"]++;
-      else if (totalCost < 200) costRanges["$100 - $200"]++;
-      else if (totalCost < 500) costRanges["$200 - $500"]++;
-      else costRanges["$500+"]++;
+      if (totalCost < 50) costRanges["Under 50"]++;
+      else if (totalCost < 100) costRanges["50 - 100"]++;
+      else if (totalCost < 200) costRanges["100 - 200"]++;
+      else if (totalCost < 500) costRanges["200 - 500"]++;
+      else costRanges["500+"]++;
     });
 
     return {
@@ -305,8 +306,7 @@ export function ProductionBOM() {
                   <Package className="h-4 w-4" />
                   <AlertTitle>{product.name}</AlertTitle>
                   <AlertDescription>
-                    SKU: {product.sku} - Price: $
-                    {Number(product.price).toFixed(2)}
+                    SKU: {product.sku} - Price: {formatPrice(Number(product.price).toFixed(2))}
                     <Badge variant="destructive" className="ml-2">
                       No BOM
                     </Badge>
@@ -511,7 +511,7 @@ export function ProductionBOM() {
       {/* Cost Distribution */}
       <Card className="md:col-span-2 lg:col-span-1">
         <CardHeader>
-          <CardTitle>BOM Cost Distribution</CardTitle>
+          <CardTitle>BOM Cost Distribution {currency}</CardTitle>
           <CardDescription>Products grouped by BOM cost ranges</CardDescription>
         </CardHeader>
         <CardContent>

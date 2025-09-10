@@ -17,6 +17,7 @@ import {
 import { Skeleton } from "@/components/skeleton";
 import { useMemo } from "react";
 import { Line, Doughnut } from "react-chartjs-2";
+import { currency } from "@/lib/utils";
 
 const chartOptions = {
   responsive: true,
@@ -137,7 +138,7 @@ export function OrderManagement() {
     const months = [];
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const now = new Date();
-    
+
     for (let i = 5; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push({
@@ -191,7 +192,7 @@ export function OrderManagement() {
     salesOrders.data.forEach((order) => {
       const customer = order.customer_name;
       // Use the pre-calculated orderTotal if available, otherwise calculate from items
-      const total = order.orderTotal || 
+      const total = order.orderTotal ||
         order.items?.reduce(
           (sum, item) => sum + Number(item.quantity) * Number(item.price),
           0,
@@ -298,7 +299,7 @@ export function OrderManagement() {
                     </p>
                   </div>
                   <Badge variant="outline">
-                    ${customer.value.toLocaleString()}
+                    {currency}{customer.value.toLocaleString()}
                   </Badge>
                 </div>
               ))}
@@ -331,7 +332,7 @@ export function OrderManagement() {
                     </p>
                   </div>
                   <Badge variant="outline">
-                    ${supplier.value.toLocaleString()}
+                    {currency}{supplier.value.toLocaleString()}
                   </Badge>
                 </div>
               ))}

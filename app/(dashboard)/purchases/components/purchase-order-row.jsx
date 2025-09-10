@@ -55,7 +55,7 @@ export default function PurchaseOrderRow({ order, onEdit, onDelete }) {
         </TableCell>
         <TableCell>{formatDate(order.updatedAt)}</TableCell>
         <TableCell className="font-medium">
-          ${calculateTotal().toFixed(2)}
+          {formatPrice(calculateTotal().toFixed(2))}
         </TableCell>
         {(onEdit || onDelete) && (
           <TableCell className="text-right">
@@ -107,10 +107,10 @@ export default function PurchaseOrderRow({ order, onEdit, onDelete }) {
                           {item.quantity} {item.raw_material.unit}
                         </TableCell>
                         <TableCell className="text-right">
-                          ${item.price.toFixed(2)}
+                          {formatPrice(item.price.toFixed(2))}
                         </TableCell>
                         <TableCell className="text-right font-medium">
-                          ${(item.quantity * item.price).toFixed(2)}
+                          {formatPrice((item.quantity * item.price).toFixed(2))}
                         </TableCell>
                       </TableRow>
                     ))}

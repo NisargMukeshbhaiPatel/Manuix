@@ -57,7 +57,7 @@ import {
   createSalesOrder,
 } from "@/actions/sales-order";
 import { getProducts } from "@/actions/product";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatPrice } from "@/lib/utils";
 import SearchInput from "@/components/search-input";
 import EditSalesOrderDialog from "./components/edit-sales-order-dialog";
 import CreateSalesOrderDialog from "./components/create-sales-dialog";
@@ -298,8 +298,8 @@ export default function SalesOrdersPage({ perms }) {
                     <TableCell>
                       {getPaymentStatusBadge(order.payment_status)}
                     </TableCell>
-                    <TableCell>${order.payment_amount.toFixed(2)}</TableCell>
-                    <TableCell>${order.orderTotal.toFixed(2)}</TableCell>
+                    <TableCell>{formatPrice(order.payment_amount.toFixed(2))}</TableCell>
+                    <TableCell>{formatPrice(order.orderTotal.toFixed(2))}</TableCell>
                     <TableCell>{formatDate(order.updatedAt)}</TableCell>
                     {(perms?.canEdit || perms?.canDelete) && (
                       <TableCell className="text-right">
@@ -385,10 +385,10 @@ export default function SalesOrdersPage({ perms }) {
                                       {item.product?.unit || item.unit}
                                     </TableCell>
                                     <TableCell>
-                                      ${item.price.toFixed(2)}
+                                      {formatPrice(item.price.toFixed(2))}
                                     </TableCell>
                                     <TableCell>
-                                      ${(item.quantity * item.price).toFixed(2)}
+                                      {formatPrice((item.quantity * item.price).toFixed(2))}
                                     </TableCell>
                                   </TableRow>
                                 ))}

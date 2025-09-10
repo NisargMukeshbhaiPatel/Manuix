@@ -19,7 +19,7 @@ import SearchInput from "@/components/search-input";
 import { Loader2, Check } from "lucide-react";
 
 import { getInventoryItems } from "@/actions/inventory";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatPrice } from "@/lib/utils";
 
 import { DeleteDialog } from "./components/delete-dialog";
 import { Pagination } from "./components/pagination";
@@ -217,7 +217,7 @@ export default function InventoryManagement({ perms }) {
                       </div>
                     </TableCell>
                     <TableCell>{item.item.unit}</TableCell>
-                    <TableCell>${item.item.price.toFixed(2)}</TableCell>
+                    <TableCell>{formatPrice(item.item.price.toFixed(2))}</TableCell>
                     <TableCell>{formatDate(item.last_updated)}</TableCell>
                     {(perms?.canEdit || perms?.canDelete) && (
                       <TableCell>

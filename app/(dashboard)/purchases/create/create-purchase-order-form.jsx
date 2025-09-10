@@ -32,6 +32,7 @@ import { getRawMaterials, createRawMaterial } from "@/actions/raw-material";
 import MaterialForm from "../../raw-materials/components/material-form";
 
 import { useSearchParams } from "next/navigation";
+import { formatPrice } from "@/lib/utils";
 
 export default function CreatePurchaseOrderForm() {
   const router = useRouter();
@@ -395,7 +396,7 @@ export default function CreatePurchaseOrderForm() {
                   </div>
                   {item.quantity && item.price && (
                     <div className="text-right text-sm text-muted-foreground">
-                      Subtotal: ${(parseFloat(item.quantity || 0) * parseFloat(item.price || 0)).toFixed(2)}
+                      Subtotal: {formatPrice((parseFloat(item.quantity || 0) * parseFloat(item.price || 0)).toFixed(2))}
                     </div>
                   )}
                 </div>
@@ -404,9 +405,9 @@ export default function CreatePurchaseOrderForm() {
             {formData.items.length > 0 && (
               <div className="border-t pt-4">
                 <div className="text-right font-semibold">
-                  Total: ${formData.items.reduce((total, item) => 
+                  Total: {formatPrice(formData.items.reduce((total, item) => 
                     total + (parseFloat(item.quantity || 0) * parseFloat(item.price || 0)), 0
-                  ).toFixed(2)}
+                  ).toFixed(2))}
                 </div>
               </div>
             )}

@@ -22,6 +22,7 @@ import {
   Target,
   ShoppingBag,
 } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 
 export function ExecutiveSummary() {
   const { data: financeSummary, isLoading: financeLoading } =
@@ -53,7 +54,7 @@ export function ExecutiveSummary() {
           ) : (
             <>
               <div className="text-2xl font-bold">
-                ${Number(revenue.toFixed(2)).toLocaleString()}
+                {formatPrice(Number(revenue.toFixed(2)))}
               </div>
               <div className="flex items-center text-xs text-muted-foreground">
                 <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
@@ -75,7 +76,7 @@ export function ExecutiveSummary() {
           ) : (
             <>
               <div className="text-2xl font-bold">
-                ${Number(expenses.toFixed(2)).toLocaleString()}
+                {formatPrice(Number(expenses.toFixed(2)))}
               </div>
               <div className="flex items-center text-xs text-muted-foreground">
                 <TrendingDown className="mr-1 h-3 w-3 text-red-500" />
@@ -90,7 +91,7 @@ export function ExecutiveSummary() {
           <CardTitle className="text-sm font-medium">Profit Margin</CardTitle>
           <Target className="h-4 w-4 text-muted-foreground" />
           <CardDescription>
-            Net Profit: ${Number(netProfit?.toFixed(2)).toLocaleString()}
+            Net Profit: {formatPrice(Number(netProfit?.toFixed(2)))}
           </CardDescription>
         </CardHeader>
         <CardContent>

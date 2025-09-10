@@ -15,6 +15,7 @@ import { Label } from "@/components/label";
 import { Textarea } from "@/components/textarea";
 import { Package, Save, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { currency } from "@/lib/utils";
 
 export default function ProductEditModal({
   product,
@@ -145,7 +146,7 @@ export default function ProductEditModal({
             </div>
 
             <div className="">
-              <Label htmlFor="price">Price ($)</Label>
+              <Label htmlFor="price">Price ({currency})</Label>
               <Input
                 id="price"
                 type="number"

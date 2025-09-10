@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/components/table";
 import { Button } from "@/components/button";
-import { formatDate } from "@/lib/utils";
+import { currency, formatDate, formatPrice } from "@/lib/utils";
 
 export function BOMDetailModal({ bom, isOpen, onClose }) {
   if (!bom) return null;
@@ -63,7 +63,7 @@ export function BOMDetailModal({ bom, isOpen, onClose }) {
                   Unit Price
                 </label>
                 <div className="text-lg font-black mt-1">
-                  ${bom.product.price.toFixed(2)} per {bom.product.unit}
+                  {currency}{bom.product.price.toFixed(2)} per {bom.product.unit}
                 </div>
               </div>
               <div>
@@ -71,7 +71,7 @@ export function BOMDetailModal({ bom, isOpen, onClose }) {
                   Total Material Cost
                 </label>
                 <div className="text-lg font-black text-black bg-green-400 px-3 py-1 rounded-md border-2 border-black mt-1">
-                  ${totalCost.toFixed(2)}
+                  {formatPrice(totalCost.toFixed(2))}
                 </div>
               </div>
             </div>
@@ -86,7 +86,7 @@ export function BOMDetailModal({ bom, isOpen, onClose }) {
               </h3>
               <div className="text-sm text-muted-foreground">
                 Total Cost:{" "}
-                <span className="font-medium">${totalCost.toFixed(2)}</span>
+                <span className="font-medium">{formatPrice(totalCost.toFixed(2))}</span>
               </div>
             </div>
 
@@ -114,10 +114,10 @@ export function BOMDetailModal({ bom, isOpen, onClose }) {
                         </TableCell>
                         <TableCell>{item.raw_material.unit}</TableCell>
                         <TableCell className="text-right">
-                          ${item.raw_material.price.toFixed(2)}
+                          {formatPrice(item.raw_material.price.toFixed(2))}
                         </TableCell>
                         <TableCell className="text-right font-medium">
-                          ${itemTotal.toFixed(2)}
+                          {formatPrice(itemTotal.toFixed(2))}
                         </TableCell>
                       </TableRow>
                     );

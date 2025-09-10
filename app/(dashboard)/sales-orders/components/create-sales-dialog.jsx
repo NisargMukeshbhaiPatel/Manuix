@@ -34,6 +34,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { createSalesOrder } from "@/actions/sales-order";
 import { getProducts } from "@/actions/product";
 import SearchInput from "@/components/search-input";
+import { currency } from "@/lib/utils";
 
 export default function CreateSalesOrderDialog() {
   const [open, setOpen] = useState(false);
@@ -301,7 +302,7 @@ export default function CreateSalesOrderDialog() {
                           >
                             <div className="font-medium">{product.name}</div>
                             <div className="text-sm text-gray-500">
-                              SKU: {product.sku} | Price: $
+                              SKU: {product.sku} | Price: {currency}
                               {product.selling_price || product.price || 0}
                             </div>
                           </div>
