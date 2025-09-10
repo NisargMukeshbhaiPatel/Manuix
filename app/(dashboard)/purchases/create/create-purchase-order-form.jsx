@@ -31,18 +31,25 @@ import { createPurchaseOrder } from "@/actions/purchase-order";
 import { getRawMaterials, createRawMaterial } from "@/actions/raw-material";
 import MaterialForm from "../../raw-materials/components/material-form";
 
+import { useSearchParams } from "next/navigation";
+
 export default function CreatePurchaseOrderForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState({
+  const searchParams = useSearchParams();
+  const rawMaterialId = searchParams?.get("id") || "";
+  const rawMaterialQuantity = searchParams?.get("quantitiy") || "";
+  const [formData, setFormData] = useState(() => ({
     supplier_name: "",
     supplier_contact: "",
     order_date: new Date().toISOString().split('T')[0],
     expected_delivery_date: "",
     status: "draft",
     notes: "",
-    items: []
-  });
+    items: rawMaterialId
+      ? [{ raw_material_id: rawMaterialId, quantity: rawMaterialQuantity, price: "" }]
+      : []
+  }));
   const [showMaterialDialog, setShowMaterialDialog] = useState(false);
 
   // Fetch raw materials for the dropdown

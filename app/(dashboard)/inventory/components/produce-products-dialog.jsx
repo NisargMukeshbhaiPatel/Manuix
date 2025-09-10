@@ -26,6 +26,7 @@ import { Factory, Loader2 } from "lucide-react";
 
 import { produceProducts } from "@/actions/inventory";
 import { getProducts } from "@/actions/product";
+import { createProductionDraft } from "@/actions/production-draft";
 
 export function ProduceProductsDialog({ queryKey }) {
   const [open, setOpen] = useState(false);
@@ -38,6 +39,36 @@ export function ProduceProductsDialog({ queryKey }) {
     queryKey: ["products", { page: 1, limit: 100 }],
     queryFn: () => getProducts({ page: 1, limit: 100 }),
     enabled: open, // Only fetch when dialog is open
+  });
+
+  const draftMutation = useMutation({
+    mutationFn: ({ productId, quantity }) =>
+      createProductionDraft({ productId, quantity: parseFloat(quantity) }),
+    onSuccess: (data) => {
+      if (data.success) {
+        toast({
+          title: "Draft Created",
+          description: data.message || "Production draft created successfully.",
+        });
+        queryClient.invalidateQueries({ queryKey });
+        setOpen(false);
+        setProductId("");
+        setQuantity("");
+      } else {
+        toast({
+          title: "Draft Creation Failed",
+          description: data.message,
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create production draft",
+        variant: "destructive",
+      });
+    },
   });
 
   const mutation = useMutation({
@@ -143,14 +174,7 @@ export function ProduceProductsDialog({ queryKey }) {
             </div>
           </div>
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={mutation.isPending}
-            >
-              Cancel
-            </Button>
+
             <Button
               type="submit"
               disabled={mutation.isPending || !productId || !quantity}
@@ -159,6 +183,34 @@ export function ProduceProductsDialog({ queryKey }) {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               Produce
+            </Button>
+            <Button
+              type="button"
+              disabled={draftMutation.isPending || !productId || !quantity}
+              onClick={() => {
+                if (!productId || !quantity || parseFloat(quantity) <= 0) {
+                  toast({
+                    title: "Validation Error",
+                    description: "Please select a product and enter a valid quantity",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                draftMutation.mutate({ productId, quantity });
+              }}
+            >
+              {draftMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Draft
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={mutation.isPending || draftMutation.isPending}
+            >
+              Cancel
             </Button>
           </DialogFooter>
         </form>

@@ -5,6 +5,9 @@ import requirePageAccess from "@/lib/requirePageAccess";
 import { createServerPermissionsFromCollection } from "@/lib/rbac";
 import InventoryManagement from "./inventory-management.jsx";
 import { ProduceProductsDialog } from "./components/produce-products-dialog";
+import Link from "next/link";
+import { Package } from "lucide-react";
+import { Button } from "@/components/button";
 
 export default async function InventoryPage() {
   await requirePageAccess({
@@ -35,20 +38,28 @@ export default async function InventoryPage() {
         <h1 className="text-xl md:text-2xl font-bold tracking-tight">
           Inventory Management
         </h1>
-        {perms.canWrite && (
-          <ProduceProductsDialog
-            queryKey={[
-              "inventory",
-              {
-                page: 1,
-                limit: 10,
-                itemType: "all",
-                lowStock: false,
-                searchTerm: "",
-              },
-            ]}
-          />
-        )}
+        <div className="flex items-center gap-2">
+          <Link href="/production-drafts">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Package className="h-4 w-4" />
+              View Production Drafts
+            </Button>
+          </Link>
+          {perms.canWrite && (
+            <ProduceProductsDialog
+              queryKey={[
+                "inventory",
+                {
+                  page: 1,
+                  limit: 10,
+                  itemType: "all",
+                  lowStock: false,
+                  searchTerm: "",
+                },
+              ]}
+            />
+          )}
+        </div>
       </div>
 
       <HydrationBoundary state={dehydrate(queryClient)}>

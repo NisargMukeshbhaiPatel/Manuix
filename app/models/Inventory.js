@@ -176,21 +176,11 @@ InventorySchema.statics.produceProducts = async function(productId, quantity, op
     // Check if the product can be produced
     const productionCheck = await product.canProduce(quantity);
     if (!productionCheck.canProduce) {
-      // If cannot produce, create a draft
-      const ProductionDraft = mongoose.models.ProductionDraft;
-      if (ProductionDraft) {
-        await ProductionDraft.create({
-          product_id: productId,
-          quantity: quantity,
-          created_by: options.userId || null,
-        });
-      }
       return {
         success: false,
         message: productionCheck.message,
         shortages: productionCheck.shortages || [],
-        producibleQuantity: productionCheck.producibleQuantity || 0,
-        draftCreated: true
+        producibleQuantity: productionCheck.producibleQuantity || 0
       };
     }
 

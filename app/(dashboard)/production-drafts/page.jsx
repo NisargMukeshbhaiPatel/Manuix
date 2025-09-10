@@ -20,6 +20,7 @@ export default async function ProductionDraftsPage() {
       queryFn: getProductionDrafts,
     });
   } catch (error) {
+    console.error("Error fetching production drafts:", error);
     return <div className="text-red-600">Error: {error.message}</div>;
   }
 
