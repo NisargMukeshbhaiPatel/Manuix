@@ -11,7 +11,7 @@ import {
 } from "@/components/table";
 import { ChevronDown, ChevronRight, Edit, Trash2 } from "lucide-react";
 
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatPrice } from "@/lib/utils";
 
 const getStatusColor = (status) => {
   const variants = {
