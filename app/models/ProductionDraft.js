@@ -13,6 +13,12 @@ const ProductionDraftSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.Decimal128,
     required: true,
   },
+  sales_order_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "SalesOrder",
+    required: false,
+    default: null,
+  },
   created_by: {
     type: mongoose.Schema.Types.ObjectId,
     ref: User.modelName,

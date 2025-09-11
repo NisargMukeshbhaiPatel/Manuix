@@ -71,9 +71,27 @@ export const getSalesOrders = withRead(async ({
       .limit(limit)
       .sort({ order_date: -1, createdAt: -1 }); // Sort by order date (newest first)
 
+    // Get Inventory model
+    const Inventory = (await import("@/models/Inventory")).default;
+
+    // For each sales order, include inventory quantity for each product
+    const salesOrdersWithInventory = await Promise.all(salesOrders.map(async so => {
+      const soObj = so.toJSON();
+      if (soObj.items && Array.isArray(soObj.items)) {
+        soObj.items = await Promise.all(soObj.items.map(async item => {
+          let inventoryQty = await Inventory.getStockLevel("product", item.product._id);
+          return {
+            ...item,
+            inventory_quantity: inventoryQty,
+          };
+        }));
+      }
+      return soObj;
+    }));
+
     return {
       success: true,
-      data: salesOrders.map(so => so.toJSON()),
+      data: salesOrdersWithInventory,
       pagination: {
         total: totalItems,
         page,

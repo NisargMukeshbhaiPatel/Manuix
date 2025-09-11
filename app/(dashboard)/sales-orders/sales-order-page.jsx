@@ -241,6 +241,7 @@ export default function SalesOrdersPage({ perms }) {
           <TableHeader>
             <TableRow>
               <TableHead className="w-12"></TableHead>
+              <TableHead>Order ID</TableHead>
               <TableHead>Customer</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Payment</TableHead>
@@ -289,6 +290,7 @@ export default function SalesOrdersPage({ perms }) {
                         )}
                       </Button>
                     </TableCell>
+                    <TableCell className="font-mono">{order._id?.slice(-8)}</TableCell>
                     <TableCell className="font-medium">
                       <div>
                         <div>{order.customer_name}</div>

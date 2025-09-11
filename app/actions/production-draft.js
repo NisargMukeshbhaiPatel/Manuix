@@ -3,11 +3,12 @@ import dbConnect from "@/lib/db";
 import ProductionDraft from "@/models/ProductionDraft";
 
 // Create a new production draft
-export async function createProductionDraft({ productId, quantity, createdBy }) {
+export async function createProductionDraft({ productId, quantity, createdBy, salesOrderId }) {
   await dbConnect();
   const ProductionDraft = (await import("@/models/ProductionDraft")).default;
   const draft = new ProductionDraft({
     product_id: productId,
+    sales_order_id: salesOrderId || null,
     quantity,
     created_by: createdBy || null,
     created_at: new Date(),
@@ -77,6 +78,7 @@ export async function getProductionDrafts() {
       ...draft,
       _id: draft._id?.toString(),
       product_id: draft.product_id?._id?.toString() || draft.product_id?.toString(),
+      sales_order_id: draft.sales_order_id ? draft.sales_order_id.toString() : null,
       created_by: draft.created_by?.toString(),
       quantity: draft.quantity?.toString(),
       created_at: draft.created_at instanceof Date ? draft.created_at.toISOString() : draft.created_at,
@@ -89,6 +91,7 @@ export async function getProductionDrafts() {
       requiredMaterials,
     };
   }));
+  console.log("Enriched Drafts:", enrichedDrafts);
   return enrichedDrafts;
 }
 
