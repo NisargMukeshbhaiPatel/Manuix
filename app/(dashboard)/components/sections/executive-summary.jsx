@@ -54,7 +54,7 @@ export function ExecutiveSummary() {
           ) : (
             <>
               <div className="text-2xl font-bold">
-                {formatPrice(Number(revenue.toFixed(2)))}
+                {formatPrice(Number(revenue))}
               </div>
               <div className="flex items-center text-xs text-muted-foreground">
                 <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
@@ -76,7 +76,7 @@ export function ExecutiveSummary() {
           ) : (
             <>
               <div className="text-2xl font-bold">
-                {formatPrice(Number(expenses.toFixed(2)))}
+                {formatPrice(Number(expenses))}
               </div>
               <div className="flex items-center text-xs text-muted-foreground">
                 <TrendingDown className="mr-1 h-3 w-3 text-red-500" />
@@ -91,7 +91,7 @@ export function ExecutiveSummary() {
           <CardTitle className="text-sm font-medium">Profit Margin</CardTitle>
           <Target className="h-4 w-4 text-muted-foreground" />
           <CardDescription>
-            Net Profit: {formatPrice(Number(netProfit?.toFixed(2)))}
+            Net Profit: {formatPrice(Number(netProfit))}
           </CardDescription>
         </CardHeader>
         <CardContent>

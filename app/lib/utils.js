@@ -23,5 +23,5 @@ export const formatDate = (dateString) => {
 
 export const currency = "£";
 export const formatPrice = (price) => {
-  return currency + price;
+  return currency + price.toFixed(2);
 };

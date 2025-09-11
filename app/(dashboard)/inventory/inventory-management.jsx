@@ -83,12 +83,15 @@ export default function InventoryManagement({ perms }) {
     queryFn: () => getSalesOrders({ page: salesOrdersPage, limit: 5, status: "draft" }),
   });
 
+  const [pendingOrderId, setPendingOrderId] = useState(null);
   // Complete Order mutation with loading and result feedback
   const completeOrderMutation = useMutation({
     mutationFn: async (orderId) => {
+      setPendingOrderId(orderId);
       return updateSalesOrder(orderId, { status: "completed" });
     },
     onSuccess: (data) => {
+      setPendingOrderId(null);
       refetchSalesOrders();
       refetchProductionDrafts();
       refetch();
@@ -98,6 +101,7 @@ export default function InventoryManagement({ perms }) {
       });
     },
     onError: (error) => {
+      setPendingOrderId(null);
       toast({
         title: "Error Completing Order",
         description: error?.message || "Failed to complete sales order.",
@@ -256,7 +260,7 @@ export default function InventoryManagement({ perms }) {
                             )
                           }
                         >
-                          {completeOrderMutation.isPending ? "Completing..." : "Complete Order"}
+                          {completeOrderMutation.isPending && pendingOrderId === order._id ? "Completing..." : "Complete Order"}
                         </Button>
                       )}
                     </TableCell>
@@ -463,7 +467,7 @@ export default function InventoryManagement({ perms }) {
                       </div>
                     </TableCell>
                     <TableCell>{item.item.unit}</TableCell>
-                    <TableCell>{formatPrice(item.item.price.toFixed(2))}</TableCell>
+                    <TableCell>{formatPrice(item.item.price)}</TableCell>
                     <TableCell>{formatDate(item.last_updated)}</TableCell>
                     {(perms?.canEdit || perms?.canDelete) && (
                       <TableCell>

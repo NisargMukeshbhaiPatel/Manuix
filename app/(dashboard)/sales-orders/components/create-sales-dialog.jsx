@@ -34,7 +34,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { createSalesOrder } from "@/actions/sales-order";
 import { getProducts } from "@/actions/product";
 import SearchInput from "@/components/search-input";
-import { currency } from "@/lib/utils";
+import { currency, formatPrice } from "@/lib/utils";
 
 export default function CreateSalesOrderDialog() {
   const [open, setOpen] = useState(false);
@@ -387,9 +387,9 @@ export default function CreateSalesOrderDialog() {
                       <TableCell>{item.product.sku}</TableCell>
                       <TableCell>{item.quantity}</TableCell>
                       <TableCell>{item.product.unit}</TableCell>
-                      <TableCell>${item.price.toFixed(2)}</TableCell>
+                      <TableCell>{formatPrice(item.price)}</TableCell>
                       <TableCell>
-                        ${(item.quantity * item.price).toFixed(2)}
+                        {formatPrice(item.quantity * item.price)}
                       </TableCell>
                       <TableCell>
                         <Button
@@ -406,7 +406,7 @@ export default function CreateSalesOrderDialog() {
                 </TableBody>
               </Table>
               <div className="text-right">
-                <strong>Total: ${calculateTotal().toFixed(2)}</strong>
+                <strong>Total: {formatPrice(calculateTotal())}</strong>
               </div>
             </div>
           )}

@@ -396,7 +396,7 @@ export default function CreatePurchaseOrderForm() {
                   </div>
                   {item.quantity && item.price && (
                     <div className="text-right text-sm text-muted-foreground">
-                      Subtotal: {formatPrice((parseFloat(item.quantity || 0) * parseFloat(item.price || 0)).toFixed(2))}
+                      Subtotal: {formatPrice(parseFloat(item.quantity || 0) * parseFloat(item.price || 0))}
                     </div>
                   )}
                 </div>
@@ -407,7 +407,7 @@ export default function CreatePurchaseOrderForm() {
                 <div className="text-right font-semibold">
                   Total: {formatPrice(formData.items.reduce((total, item) => 
                     total + (parseFloat(item.quantity || 0) * parseFloat(item.price || 0)), 0
-                  ).toFixed(2))}
+                  ))}
                 </div>
               </div>
             )}

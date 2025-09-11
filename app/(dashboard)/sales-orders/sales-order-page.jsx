@@ -300,8 +300,8 @@ export default function SalesOrdersPage({ perms }) {
                     <TableCell>
                       {getPaymentStatusBadge(order.payment_status)}
                     </TableCell>
-                    <TableCell>{formatPrice(order.payment_amount.toFixed(2))}</TableCell>
-                    <TableCell>{formatPrice(order.orderTotal.toFixed(2))}</TableCell>
+                    <TableCell>{formatPrice(order.payment_amount)}</TableCell>
+                    <TableCell>{formatPrice(order.orderTotal)}</TableCell>
                     <TableCell>{formatDate(order.updatedAt)}</TableCell>
                     {(perms?.canEdit || perms?.canDelete) && (
                       <TableCell className="text-right">
@@ -387,10 +387,10 @@ export default function SalesOrdersPage({ perms }) {
                                       {item.product?.unit || item.unit}
                                     </TableCell>
                                     <TableCell>
-                                      {formatPrice(item.price.toFixed(2))}
+                                      {formatPrice(item.price)}
                                     </TableCell>
                                     <TableCell>
-                                      {formatPrice((item.quantity * item.price).toFixed(2))}
+                                      {formatPrice(item.quantity * item.price)}
                                     </TableCell>
                                   </TableRow>
                                 ))}

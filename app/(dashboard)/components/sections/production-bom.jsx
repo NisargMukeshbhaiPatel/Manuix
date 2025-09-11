@@ -306,7 +306,7 @@ export function ProductionBOM() {
                   <Package className="h-4 w-4" />
                   <AlertTitle>{product.name}</AlertTitle>
                   <AlertDescription>
-                    SKU: {product.sku} - Price: {formatPrice(Number(product.price).toFixed(2))}
+                    SKU: {product.sku} - Price: {formatPrice(Number(product.price))}
                     <Badge variant="destructive" className="ml-2">
                       No BOM
                     </Badge>

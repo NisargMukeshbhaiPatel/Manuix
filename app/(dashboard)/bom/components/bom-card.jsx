@@ -91,7 +91,7 @@ export function BOMCard({ bom, onView, onSuccess, perms }) {
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold text-primary">
-              {formatPrice(bom.product.price.toFixed(2))}
+              {formatPrice(bom.product.price)}
             </div>
             <div className="text-xs text-muted-foreground">
               per {bom.product.unit}
@@ -114,7 +114,7 @@ export function BOMCard({ bom, onView, onSuccess, perms }) {
           <div className="flex items-center space-x-2">
             <DollarSign className="w-4 h-4 text-muted-foreground" />
             <div>
-              <div className="text-sm font-medium">{formatPrice(totalCost.toFixed(2))}</div>
+              <div className="text-sm font-medium">{formatPrice(totalCost)}</div>
               <div className="text-xs text-muted-foreground">Total Cost</div>
             </div>
           </div>
