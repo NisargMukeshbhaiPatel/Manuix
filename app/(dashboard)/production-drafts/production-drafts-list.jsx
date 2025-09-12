@@ -47,6 +47,20 @@ export default function ProductionDraftsList() {
   });
 
   const drafts = data || [];
+ 
+  const handleDownloadJson = () => {
+    const jsonStr = JSON.stringify(drafts, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "production-drafts.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const [selectedDraft, setSelectedDraft] = useState(null);
   const [filter, setFilter] = useState("all");
   const [editDraftId, setEditDraftId] = useState(null);
@@ -102,6 +116,7 @@ export default function ProductionDraftsList() {
             <Button size="sm" variant={filter === "all" ? "default" : "outline"} onClick={() => setFilter("all")}>All</Button>
             <Button size="sm" variant={filter === "producible" ? "default" : "outline"} onClick={() => setFilter("producible")}>Producible</Button>
             <Button size="sm" variant={filter === "nonproducible" ? "default" : "outline"} onClick={() => setFilter("nonproducible")}>Non-Producible</Button>
+            <Button size="sm" variant="outline" onClick={handleDownloadJson}>Download JSON</Button>
           </div>
         </CardHeader>
         <CardContent>
