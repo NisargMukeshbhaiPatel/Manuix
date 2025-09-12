@@ -44,14 +44,11 @@ export async function getProductionDrafts() {
 
   // For each draft, use product instance's getBOM method
   const Inventory = (await import("@/models/Inventory")).default;
-  const Product = (await import("@/models/Product")).default;
-
+  const BOM = (await import("@/models/BOM")).default;
   const enrichedDrafts = await Promise.all(drafts.map(async draft => {
-    // Get product instance
-    const productInstance = await Product.findById(draft.product_id._id);
-
-    const bomDoc = await productInstance.getBOM();
-    const requiredMaterials = await Promise.all(bomDoc.items.map(async item => {
+    const bomDoc = await BOM.findOne({ product_id: draft.product_id._id })
+      .populate('items.raw_material_id');
+    const requiredMaterials = bomDoc ? await Promise.all(bomDoc.items.map(async item => {
       const materialId = item.raw_material_id._id.toString();
       const currentStock = await Inventory.getStockLevel("raw_material", materialId);
       const required = parseFloat(item.quantity.toString());
@@ -66,7 +63,7 @@ export async function getProductionDrafts() {
         totalRequired,
         available: currentStock,
       };
-    }));
+    })) : [];
 
     return {
       ...draft,
