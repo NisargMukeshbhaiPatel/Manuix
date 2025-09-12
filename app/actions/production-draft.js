@@ -48,31 +48,27 @@ export async function getProductionDrafts() {
 
   const enrichedDrafts = await Promise.all(drafts.map(async draft => {
     // Get product instance
-    const productInstance = await Product.findById(draft.product_id?._id || draft.product_id);
+    const productInstance = await Product.findById(draft.product_id._id);
     let requiredMaterials = [];
-    if (productInstance && typeof productInstance.getBOM === "function") {
-      const bomDoc = await productInstance.getBOM();
+    const bomDoc = await productInstance.getBOM();
       if (bomDoc && bomDoc.items) {
         requiredMaterials = await Promise.all(bomDoc.items.map(async item => {
-          const materialId = item.raw_material_id?._id?.toString() || item.raw_material_id?.toString();
-          // Get current inventory for this raw material
+          const materialId = item.raw_material_id._id.toString();
           const currentStock = await Inventory.getStockLevel("raw_material", materialId);
-          // Calculate total required quantity for this draft
-          const itemRequired = parseFloat(item.quantity?.toString() || "0");
-          const draftQuantity = parseFloat(draft.quantity?.toString() || "1");
-          const totalRequired = itemRequired * draftQuantity;
+          const required = parseFloat(item.quantity.toString());
+          const draftQuantity = parseFloat(draft.quantity.toString());
+          const totalRequired = required * draftQuantity;
           return {
             _id: materialId,
             name: item.raw_material_id?.name,
             unit: item.raw_material_id?.unit,
             price: item.raw_material_id?.price?.toString(),
-            required: itemRequired,
+            required,
             totalRequired,
             available: currentStock,
           };
         }));
       }
-    }
 
     return {
       ...draft,
