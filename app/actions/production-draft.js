@@ -91,7 +91,6 @@ export async function getProductionDrafts() {
       requiredMaterials,
     };
   }));
-  console.log("Enriched Drafts:", enrichedDrafts);
   return enrichedDrafts;
 }
 

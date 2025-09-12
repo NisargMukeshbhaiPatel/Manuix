@@ -286,7 +286,7 @@ export default function InventoryManagement({ perms }) {
                                 // Check if a draft exists for this order and product
                                 const draftExists = productionDrafts.some(
                                   (draft) =>
-                                    draft.sales_order_id === order._id
+                                    draft.sales_order_id === order._id && draft.product_id === item.product._id
                                 );
                                 return (
                                   <TableRow key={item.product._id || idx}>
