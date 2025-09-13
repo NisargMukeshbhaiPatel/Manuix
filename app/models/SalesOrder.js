@@ -392,27 +392,18 @@ SalesOrderSchema.methods.cancel = async function() {
 };
 
 // Method to record a payment
-SalesOrderSchema.methods.recordPayment = async function({ amount }) {
-  if (this.status === 'cancelled') {
-    throw new Error('Cannot record payment for cancelled order');
-  }
-  
-  const paymentAmount = parseFloat(amount);
-  if (isNaN(paymentAmount) || paymentAmount <= 0) {
+SalesOrderSchema.methods.updatePayment = async function({ amount, status }) {
+  if (amount == null || isNaN(amount) || amount < 0) {
     throw new Error('Invalid payment amount');
   }
   
-  // Update payment amount
-  const currentPayment = this.paymentDecimal;
-  const newPayment = paymentAmount;
-  this.payment_amount = newPayment;
-  
-  // Update payment status
-  if (newPayment >= this.orderTotal) {
-    this.payment_status = 'paid';
-  } else if (newPayment > 0) {
-    this.payment_status = 'partial';
+  if (!['unpaid', 'partial', 'paid'].includes(status)) {
+    throw new Error('Invalid payment status');
   }
+  
+  // Update payment amount and status
+  this.payment_amount = parseFloat(amount);
+  this.payment_status = status;
   
   return this.save();
 };

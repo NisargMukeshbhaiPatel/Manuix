@@ -11,9 +11,9 @@ const { withCreate, withRead, withUpdate, withDelete } = createCollectionRBAC("s
 /**
  * Get all sales orders with pagination and filtering
  */
-export const getSalesOrders = withRead(async ({ 
-  page = 1, 
-  limit = 10, 
+export const getSalesOrders = withRead(async ({
+  page = 1,
+  limit = 10,
   status = null,
   customerId = null,
   customerName = null,
@@ -23,10 +23,10 @@ export const getSalesOrders = withRead(async ({
   try {
     // Connect to the database
     await dbConnect();
-    
+
     // Create the query
     const query = {};
-    
+
     // Apply status filter if provided
     if (status) {
       query.status = status;
@@ -116,11 +116,11 @@ export const getSalesOrderStats = withRead(async ({ period = 'all' } = {}) => {
   try {
     // Connect to the database
     await dbConnect();
-    
+
     // Set the date range based on the period
     const now = new Date();
     let startDate = null; // Default to null for all-time stats
-    
+
     if (period !== 'all') {
       switch (period) {
         case 'week':
@@ -143,10 +143,10 @@ export const getSalesOrderStats = withRead(async ({ period = 'all' } = {}) => {
           startDate = null; // Default to all-time
       }
     }
-    
+
     // Build the match query - only add date filter if startDate is set
     const matchQuery = startDate ? { createdAt: { $gte: startDate } } : {};
-    
+
     // Calculate total amount from items array
     const statusQuery = [
       { $match: matchQuery },
@@ -174,9 +174,9 @@ export const getSalesOrderStats = withRead(async ({ period = 'all' } = {}) => {
         }
       }
     ];
-    
+
     const statusStats = await SalesOrder.aggregate(statusQuery);
-    
+
     // Process into a more usable format
     const stats = {
       draft: { count: 0, total: 0 },
@@ -188,7 +188,7 @@ export const getSalesOrderStats = withRead(async ({ period = 'all' } = {}) => {
       start_date: startDate,
       end_date: now
     };
-    
+
     statusStats.forEach(stat => {
       if (stats[stat._id]) {
         stats[stat._id].count = stat.count;
@@ -197,7 +197,7 @@ export const getSalesOrderStats = withRead(async ({ period = 'all' } = {}) => {
         stats.total_amount += stat.total;
       }
     });
-    
+
     return {
       success: true,
       data: stats
@@ -255,8 +255,8 @@ export const createSalesOrder = withCreate(async (orderData) => {
     await dbConnect();
     const session = await getServerSession(authOptions);
     // Add the user ID who created the sales order
-    orderData.created_by = session.user.id;    
-    
+    orderData.created_by = session.user.id;
+
     // Calculate total amount if not provided
     if (!orderData.total_amount && orderData.items && orderData.items.length > 0) {
       orderData.total_amount = orderData.items.reduce((total, item) => {
@@ -270,10 +270,10 @@ export const createSalesOrder = withCreate(async (orderData) => {
       // Create the order as draft first, then complete it
       orderData.status = 'draft';
     }
-    
+
     // Create a new sales order
     const salesOrder = await SalesOrder.create(orderData);
-    
+
     // If the order was meant to be completed, complete it now
     if (originalStatus === 'completed') {
       try {
@@ -283,7 +283,7 @@ export const createSalesOrder = withCreate(async (orderData) => {
         // Don't fail the creation if completion fails, but log the error
       }
     }
-    
+
     // Populate references for the response
     await salesOrder.populate('created_by', 'name email');
     await salesOrder.populate('items.product_id');
@@ -317,23 +317,23 @@ export const updateSalesOrder = withUpdate(async (id, orderData) => {
 
     // Find the sales order by ID
     const salesOrder = await SalesOrder.findById(id);
-    
+
     if (!salesOrder) {
       return {
         success: false,
         message: "Sales order not found",
       };
     }
-    
+
     // Check if the status is being changed
     const isStatusChange = orderData.status && orderData.status !== salesOrder.status;
     const oldStatus = salesOrder.status;
-    
+
     // If this is a status change, use the appropriate method
     const session = await getServerSession(authOptions);
     if (isStatusChange) {
       const newStatus = orderData.status;
-      
+
       // Handle status changes with proper finance integration
       if (newStatus === 'completed') {
         await salesOrder.complete();
@@ -343,7 +343,7 @@ export const updateSalesOrder = withUpdate(async (id, orderData) => {
         // For other status changes, use the updateStatus method
         await salesOrder.updateStatus(newStatus, session.user.id);
       }
-      
+
       // Update other fields separately
       delete orderData.status;
       if (Object.keys(orderData).length > 0) {
@@ -355,7 +355,7 @@ export const updateSalesOrder = withUpdate(async (id, orderData) => {
       Object.assign(salesOrder, orderData);
       await salesOrder.save();
     }
-    
+
     // Refresh the sales order with populated references
     const updatedOrder = await SalesOrder.findById(id)
       .populate('created_by', 'name email')
@@ -388,7 +388,7 @@ export const updateSalesOrderPayment = withUpdate(async (id, paymentData) => {
 
     // Find the sales order by ID
     const salesOrder = await SalesOrder.findById(id);
-    
+
     if (!salesOrder) {
       return {
         success: false,
@@ -396,20 +396,32 @@ export const updateSalesOrderPayment = withUpdate(async (id, paymentData) => {
       };
     }
     const session = await getServerSession(authOptions);
-    // Record the payment
-    const result = await salesOrder.recordPayment({
-      amount: paymentData.amount,
-      // method: paymentData.method,
-      // reference: paymentData.reference,
-      // notes: paymentData.notes,
-      // userId: session.user.id
-    });
+    const Finance = (await import("@/models/Finance")).default;
+    const orderRef = salesOrder.order_number || salesOrder._id.toString().slice(-6).toUpperCase();
+    const amount = paymentData.payment_status !== 'unpaid' ? paymentData.payment_amount - (salesOrder.payment_amount || 0) : - (salesOrder.payment_amount || 0);
+    if (amount !== 0) {
+      await Finance.create({
+        type: amount > 0 ? "income" : "expense",
+        amount: Math.abs(amount),
+        date: new Date(),
+        source_type: SalesOrder.modelName,
+        source_id: salesOrder._id,
+        reference_number: orderRef,
+        description: `Payment for sales order #${orderRef}`,
+        created_by: session.user.id,
+        category: "Sales",
+      });
+    }
+
+    salesOrder.payment_status = paymentData.payment_status;
+    salesOrder.payment_amount = paymentData.payment_amount;
+    await salesOrder.save();
 
     return {
       success: true,
     };
   } catch (error) {
-    console.error("Error updating sales order payment:", error);
+    console.log("Error updating sales order payment:", error);
     return {
       success: false,
       message: "Failed to update payment",
@@ -425,17 +437,17 @@ export const deleteSalesOrder = withDelete(async (id) => {
   try {
     // Connect to the database
     await dbConnect();
-    
+
     // Find the sales order by ID
     const salesOrder = await SalesOrder.findById(id);
-    
+
     if (!salesOrder) {
       return {
         success: false,
         message: "Sales order not found",
       };
     }
-    
+
     // Only allow deletion of draft or cancelled sales orders
     if (!['draft', 'cancelled'].includes(salesOrder.status)) {
       return {
@@ -443,10 +455,10 @@ export const deleteSalesOrder = withDelete(async (id) => {
         message: `Cannot delete sales order with status "${salesOrder.status}". Only draft or cancelled orders can be deleted.`,
       };
     }
-    
+
     // Delete the sales order
     await SalesOrder.findByIdAndDelete(id);
-    
+
     return {
       success: true,
     };

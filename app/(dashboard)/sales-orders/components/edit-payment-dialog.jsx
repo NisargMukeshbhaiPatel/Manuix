@@ -23,7 +23,7 @@ import {
   DialogTrigger,
 } from "@/components/dialog";
 import { CreditCard } from "lucide-react";
-import { updateSalesOrder } from "@/actions/sales-order";
+import { updateSalesOrderPayment } from "@/actions/sales-order";
 
 export default function UpdatePaymentDialog({ order }) {
   const [open, setOpen] = useState(false);
@@ -35,7 +35,7 @@ export default function UpdatePaymentDialog({ order }) {
   const queryClient = getQueryClient();
 
   const updateMutation = useMutation({
-    mutationFn: (data) => updateSalesOrder(order._id, data),
+    mutationFn: (data) => updateSalesOrderPayment(order._id, data),
     onSuccess: (data) => {
       if (!data.success) throw new Error(data.error || data.message);
       queryClient.invalidateQueries({ queryKey: ["salesOrders"] });
